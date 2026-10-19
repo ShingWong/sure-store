@@ -9,6 +9,7 @@ export {
   getEngine,
   renderMatchParam,
   renderFtsDdl,
+  renderFtsTriggers,
   ftsSyncStatements,
   renderSearch,
 } from "./render.ts";

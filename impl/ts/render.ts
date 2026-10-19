@@ -20,7 +20,8 @@ export interface EngineFts {
   indexDdl?: string;
   defaultConfig?: string;
   configs?: string[];
-  sync: "core" | "engine";
+  sync: "core" | "engine" | "triggers";
+  triggers?: string[];
   match: FtsMatch;
   semantics: string;
   prefixSearch?: boolean;
@@ -109,7 +110,7 @@ export function ftsSyncStatements(
   engine: EngineContract,
   opts: { name: string; table: string; cols: string[]; idPredicate: string },
 ): string[] {
-  if (engine.fts.sync === "engine") return [];
+  if (engine.fts.sync === "engine" || engine.fts.sync === "triggers") return [];
   const vars: Record<string, string> = {
     name: opts.name,
     table: opts.table,
@@ -126,6 +127,30 @@ export function ftsSyncStatements(
       vars,
     ),
   ];
+}
+
+/**
+ * The trigger DDL that maintains the index when the SCHEMA owns upkeep.
+ *
+ * This is the correct shape for an external-content fts5 table: removal needs
+ * the documented 'delete' command carrying the OLD column values, which only a
+ * trigger has. Hand-maintained sync is invalid for removal — see the engine's
+ * `fts.traps`.
+ */
+export function renderFtsTriggers(
+  engine: EngineContract,
+  opts: { name: string; table: string; cols: string[] },
+): string[] {
+  if (!engine.fts.triggers) return [];
+  const vars: Record<string, string> = {
+    name: opts.name,
+    table: opts.table,
+    cols: opts.cols.join(", "),
+    newCols: ["new.rowid", ...opts.cols.map((c) => `new.${c}`)].join(", "),
+    oldCols: ["old.rowid", ...opts.cols.map((c) => `old.${c}`)].join(", "),
+    changedGuard: opts.cols.map((c) => `old.${c} IS NOT new.${c}`).join(" OR "),
+  };
+  return engine.fts.triggers.map((t) => substitute(t, vars));
 }
 
 export interface SearchOptions {

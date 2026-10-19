@@ -49,10 +49,21 @@
     ]
   },
   "ftsSync": {
-    "why": "engine-maintained indexes are a DELETION, not a translation: the core emits fewer statements",
-    "sqlite": 2,
+    "why": "the core emits NO runtime sync statements on any engine: sqlite is 'triggers' (the schema owns upkeep), turso and postgres are 'engine' (the engine owns it). A hand-maintained DELETE is not merely unnecessary — it is invalid, see the engine's fts.traps.",
+    "sqlite": 0,
     "turso": 0,
     "postgres": 0
+  },
+  "ftsTriggers": {
+    "why": "the schema-owned trio. Required for sqlite: removal needs the documented 'delete' command carrying the OLD column values, which only a trigger has.",
+    "input": { "name": "messages_fts", "table": "messages", "cols": ["subject", "fromaddr", "body_text"] },
+    "sqlite": [
+      "CREATE TRIGGER IF NOT EXISTS messages_fts_ai AFTER INSERT ON messages BEGIN INSERT INTO messages_fts(rowid, subject, fromaddr, body_text) VALUES (new.rowid, new.subject, new.fromaddr, new.body_text); END",
+      "CREATE TRIGGER IF NOT EXISTS messages_fts_ad AFTER DELETE ON messages BEGIN INSERT INTO messages_fts(messages_fts, rowid, subject, fromaddr, body_text) VALUES ('delete', old.rowid, old.subject, old.fromaddr, old.body_text); END",
+      "CREATE TRIGGER IF NOT EXISTS messages_fts_au AFTER UPDATE ON messages WHEN old.subject IS NOT new.subject OR old.fromaddr IS NOT new.fromaddr OR old.body_text IS NOT new.body_text BEGIN INSERT INTO messages_fts(messages_fts, rowid, subject, fromaddr, body_text) VALUES ('delete', old.rowid, old.subject, old.fromaddr, old.body_text); INSERT INTO messages_fts(rowid, subject, fromaddr, body_text) VALUES (new.rowid, new.subject, new.fromaddr, new.body_text); END"
+    ],
+    "turso": [],
+    "postgres": []
   },
   "search": {
     "input": {

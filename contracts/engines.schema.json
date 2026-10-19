@@ -149,7 +149,8 @@
             "indexDdl": { "type": "string" },
             "defaultConfig": { "type": "string" },
             "configs": { "type": "array", "items": { "type": "string" } },
-            "sync": { "enum": ["core", "engine"] },
+            "sync": { "enum": ["core", "engine", "triggers"] },
+            "triggers": { "type": "array", "items": { "type": "string" } },
             "match": {
               "type": "object",
               "required": ["param", "predicate", "searchFrom"],

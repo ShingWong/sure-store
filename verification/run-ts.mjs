@@ -14,6 +14,7 @@ import {
   ftsSyncStatements,
   getEngine,
   renderFtsDdl,
+  renderFtsTriggers,
   renderMatchParam,
   renderSearch,
 } from "../impl/ts/index.ts";
@@ -76,6 +77,15 @@ for (const name of ENGINES) {
       idPredicate: "account = ? AND folder = ? AND uid = ?",
     }).length,
     fixtures.ftsSync[name],
+  );
+}
+
+console.log("fts triggers");
+for (const name of ENGINES) {
+  check(
+    `${name} fts triggers (${fixtures.ftsTriggers.why})`,
+    renderFtsTriggers(getEngine(engines, name), fixtures.ftsTriggers.input),
+    fixtures.ftsTriggers[name],
   );
 }
 

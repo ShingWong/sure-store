@@ -64,7 +64,16 @@
         "ddl": "CREATE VIRTUAL TABLE IF NOT EXISTS {name} USING fts5({cols}, content='{table}', content_rowid='rowid', tokenize='{config}')",
         "defaultConfig": "unicode61",
         "configs": ["unicode61"],
-        "sync": "core",
+        "sync": "triggers",
+        "triggers": [
+          "CREATE TRIGGER IF NOT EXISTS {name}_ai AFTER INSERT ON {table} BEGIN INSERT INTO {name}(rowid, {cols}) VALUES ({newCols}); END",
+          "CREATE TRIGGER IF NOT EXISTS {name}_ad AFTER DELETE ON {table} BEGIN INSERT INTO {name}({name}, rowid, {cols}) VALUES ('delete', {oldCols}); END",
+          "CREATE TRIGGER IF NOT EXISTS {name}_au AFTER UPDATE ON {table} WHEN {changedGuard} BEGIN INSERT INTO {name}({name}, rowid, {cols}) VALUES ('delete', {oldCols}); INSERT INTO {name}(rowid, {cols}) VALUES ({newCols}); END"
+        ],
+        "traps": [
+          "Do NOT maintain this index by hand. A direct DELETE on an external-content fts5 table raises 'database disk image is malformed' for a rowid that is not yet indexed — the normal first-store case — measured on SQLite 3.45.1 and 3.51.3. Removal requires the documented 'delete' command carrying the OLD column values, which is what the triggers supply.",
+          "Guard the UPDATE trigger on the INDEXED columns only. An unguarded trigger rewrites the index row on every flags/internaldate change, and a sync updates those on every pass."
+        ],
         "match": {
           "param": "quoted-phrases",
           "predicate": "{name} MATCH ?",

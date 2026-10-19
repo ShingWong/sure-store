@@ -22,7 +22,7 @@ Probes live in `verification/live/`.
 | `schemaVersion` | `PRAGMA user_version`, read and written | same | a table: `_sure_store_meta(k,v)` + upsert |
 | `columnProbe` | `pragma_table_info('{t}')` | same | `information_schema.columns` |
 | `fts.storage` | `CREATE VIRTUAL TABLE … USING fts5(…, content='{t}', content_rowid='rowid', tokenize='unicode61')` | `CREATE INDEX … ON {t} USING fts ({cols})` | generated `tsvector` column + `GIN` index |
-| `fts.sync` | **core** emits 2 statements (delete + insert) | **engine** (none) | **engine** (generated column) |
+| `fts.sync` | **triggers** — schema-owned; the core emits nothing | **engine** (none) | **engine** (generated column) |
 | `fts.match` | `"a" "b"` (quoted phrases) | `"a" "b"` — **identical** | `a & b` (`to_tsquery`) |
 | `fts.semantics` | `tokenize='unicode61'` | engine index | `to_tsvector('simple', …)` by default |
 | `fts.ranking` | none used (order by the row's own column) | `fts_score({cols}, ?)` | `ts_rank` |
@@ -81,8 +81,14 @@ Measured against Turso, from a real core schema:
 | 3 | `DELETE FROM x_fts WHERE rowid IN (…)` | `no such table` |
 | 4 | `INSERT INTO x_fts(rowid, …) SELECT …` | `no such table` |
 
-Four statements, all search. Everything else is portable — and statements 3 and
-4 disappear rather than change, because Turso maintains its own index.
+Four statements, all search. Everything else is portable. On **Turso** statements
+3 and 4 disappear rather than change, because the engine maintains its own index.
+On **sqlite** they were never the right shape at all: a direct `DELETE` on an
+external-content fts5 table raises `database disk image is malformed` for a rowid
+that is not yet indexed — the normal first-store case — so removal needs the
+documented `'delete'` command carrying the OLD column values. That is what a
+trigger has and a caller does not, which is why `sqlite.fts.sync` is declared
+`triggers` and the core emits nothing. Measured on SQLite 3.45.1 and 3.51.3.
 
 Against Postgres, from the same schema, the same four fail *plus* the identity,
 version and column-probe dimensions.
