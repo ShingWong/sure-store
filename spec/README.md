@@ -9,6 +9,7 @@ adding a new one.
 | 02 | [Engine matrix](02-engine-matrix.md) | the measured values for sqlite, turso, postgres — **normative** |
 | 03 | [FTS semantics](03-fts-semantics.md) | what can and cannot be made equal across engines |
 | 04 | [Open questions](04-open-questions.md) | undecided: escape syntax, stemming default, shared schema DSL |
+| 05 | [The driver slot](05-driver-slot.md) | what a driver sibling is, and the criteria for creating one |
 
 ## Conformance levels
 

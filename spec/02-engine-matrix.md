@@ -168,8 +168,13 @@ Three findings worth more than the table:
    affinity and accepts any type name, so there is nothing to refuse — an unknown
    type is not an error there, and `enforced: false` says so rather than
    pretending to a fail-closed check that cannot exist. The load-bearing fact is
-   not the alias but that `jsonb` becomes TEXT, so **jsonb operators are
-   unavailable** on the embedded engines.
+   not the alias but the **operator surface**: `jsonb` becomes TEXT on the
+   embedded engines, where `->` and `->>` **do** work (SQLite 3.38+) but
+   containment and existence (`@>`, `?`, `?|`, `?&`) and GIN indexes do not.
+   Measured — `@>` fails there with *unrecognized token*, and `?` collides with
+   the placeholder. So the difference is narrower than "jsonb operators are
+   unavailable", which is the phrase this note used before the FR-2 fixture
+   caught it.
 3. **`params` and `result` are binding facts**, and live under `bindings` — see
    [01](01-capability-model.md) § *Engine facts and binding facts are different*.
 

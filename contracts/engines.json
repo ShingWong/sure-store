@@ -54,7 +54,7 @@
       "types": {
         "enforced": false,
         "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
-        "note": "SQLite assigns AFFINITY and accepts any type name verbatim, so nothing here is enforced — the map is a RECOMMENDATION, not a constraint, and an unknown type is not an error. The load-bearing fact is jsonb -> TEXT: jsonb operators are unavailable."
+        "note": "SQLite assigns AFFINITY and accepts any type name verbatim, so nothing here is enforced — the map is a RECOMMENDATION, not a constraint, and an unknown type name is NOT an error (measured). The load-bearing fact is jsonb -> TEXT: the extraction operators -> and ->> DO work (SQLite 3.38+), but containment/existence (@>, ?, ?|, ?&) and GIN indexes do not."
       },
       "serverInfo": "SELECT sqlite_version() AS v",
       "identifierQuote": "\"",
@@ -126,7 +126,7 @@
       "types": {
         "enforced": false,
         "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
-        "note": "AFFINITY, as on sqlite: any type name is accepted, nothing is enforced. jsonb -> TEXT means jsonb operators are unavailable."
+        "note": "AFFINITY, as on sqlite: any type name is accepted, nothing is enforced. Injection and extraction DO work: json_extract, json_valid, and the -> / ->> operators (measured). Containment/existence (@>, ?, ?|, ?&) and GIN indexes do not."
       },
       "serverInfo": "SELECT sqlite_version() AS v",
       "identifierQuote": "\"",
@@ -206,7 +206,7 @@
       "types": {
         "enforced": true,
         "map": { "timestamptz": "TIMESTAMPTZ", "boolean": "BOOLEAN", "jsonb": "JSONB" },
-        "note": "Native types, and jsonb round-trips as jsonb — so jsonb operators are available here and unavailable on the embedded engines."
+        "note": "Native types, and jsonb round-trips as jsonb. Every operator works — ->, ->>, @>, ?, ?|, ?& — and GIN indexes are available. The embedded engines have -> and ->> only."
       },
       "serverInfo": "SELECT version() AS v",
       "identifierQuote": "\"",
