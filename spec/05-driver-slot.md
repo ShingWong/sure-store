@@ -11,11 +11,16 @@ decision is not made under time pressure. Raising it early was the right instinc
 - A driver is a **runtime** object: it opens connections, owns a pool, binds
   parameters, and issues `BEGIN`. Every one of those is deliberately per-consumer
   — FR-1 settled it (`txOwnership` is an axis, not a shared pool type).
-- This repository is **dependency-free by design.** Its gates run on a fresh
-  clone with no `npm install`, which is what makes them reliable in CI and before
-  publish. A driver necessarily depends on its binding (`pg`,
-  `@tursodatabase/database`, `node:sqlite`), so putting one here would trade that
-  property for a convenience nobody has asked for yet.
+- This repository is **dependency-free at runtime, and its gates install
+  nothing.** Every measured fact is verified on a fresh clone under plain node,
+  which is what makes the gates reliable in CI and before publish. A driver
+  necessarily depends on its binding (`pg`, `@tursodatabase/database`,
+  `node:sqlite`), so putting one here would trade that property for a convenience
+  nobody has asked for yet.
+  Packaging is the one exception and is not a gate: `exports` must point at
+  compiled output, because a compiled consumer cannot load raw TypeScript, so a
+  build step installs a compiler as a **dev** dependency. No measured value
+  depends on it.
 
 ## What is reserved
 

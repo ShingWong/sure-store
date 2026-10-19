@@ -14,7 +14,10 @@
   "type": "module",
   "main": "./impl/ts/index.ts",
   "exports": {
-    ".": "./impl/ts/index.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./contracts": "./contracts/engines.json",
     "./spec": "./spec/README.md"
   },
@@ -24,9 +27,12 @@
     "verify": "npm run verify:render && npm run verify:behaviour",
     "verify:render": "node --experimental-strip-types verification/run-ts.mjs",
     "verify:behaviour": "node verification/run-behaviour.mjs",
+    "verify:resolver": "node verification/run-behaviour.mjs --self-check",
     "test": "node --test test/*.test.mjs",
     "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify && npm run verify:resolver",
-    "verify:resolver": "node verification/run-behaviour.mjs --self-check"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
   },
   "keywords": [
     "sqlite",
@@ -37,5 +43,14 @@
     "driver",
     "odbc",
     "storage"
-  ]
+  ],
+  "files": [
+    "dist",
+    "contracts",
+    "spec"
+  ],
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
 }

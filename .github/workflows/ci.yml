@@ -6,8 +6,12 @@ name: CI
 #   2. contract verification — the dialect tables, the fixtures and the
 #      reference renderer must still agree.
 #
-# No `npm install`: the repo is dependency-free on purpose, so both gates run on
-# a fresh clone under plain node.
+# The GATES install nothing: the repo has no runtime dependency and both gates
+# run on a fresh clone under plain node. Packaging is separate and unavoidable —
+# `exports` must point at compiled output, because a compiled consumer
+# (sure-factor runs plain node >= 20) cannot load raw TypeScript. So the
+# `package` job installs a build toolchain, and the gate job still proves the
+# contract without one.
 
 on:
   push:
@@ -51,3 +55,29 @@ jobs:
 
       - name: Contract verification — fixtures against the reference renderer
         run: npm run verify
+
+  package:
+    name: package builds and imports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # The only job that installs. TypeScript is a build tool, never a runtime
+      # dependency, and no measured value depends on it.
+      - name: Build toolchain
+        run: npm ci
+
+      - name: Compile
+        run: npm run build
+
+      - name: Packaging guard — the entry is compiled and importable
+        run: node --test test/package.test.mjs
+
+      - name: Tarball contains the contract beside the code
+        run: npm pack --dry-run
