@@ -54,14 +54,16 @@ capability must run on exactly the engines that lack it. Requiring the capabilit
 instead makes the case SKIP there — it would pass by never executing, which is
 the most expensive kind of green. Three cases in the FR-2 set had this bug.
 
-**A path that does not resolve is a FAILURE, not a skip.** Paths are nested and
-axis-scoped: engine facts under `engines.<engine>.*` (`types.map.jsonb`,
-`clock.ddlDefaultNow`, `tx.forUpdate`), binding facts under `bindings.<driver>.*`
-(`params`, `result.affectedField`). Writing `types.timestamptz` for
-`types.map.timestamptz`, or reading `result.affectedField` off an engine, fails
-the case with the offending path named. It must not skip: a skip is
-indistinguishable from "the engine genuinely lacks this capability", which is
-exactly how a typo becomes a green run. `npm run verify:resolver` proves the
+**A path that does not resolve is a FAILURE, not a skip.** The resolver
+**throws**; `undefined` never reaches a gate to be read as a falsey decision.
+Paths are nested and axis-scoped: engine facts under `engines.<engine>.*`
+(`types.map.jsonb`, `clock.ddlDefaultNow`, `tx.forUpdate`), binding facts under
+`bindings.<driver>.*` (`params`, `result.affectedField`). Writing
+`types.timestamptz` for `types.map.timestamptz`, or reading
+`result.affectedField` off an engine, fails the case with the offending path
+named. It must not skip: a skip is indistinguishable from "the engine genuinely
+lacks this capability", which is exactly how a typo becomes a green run.
+`npm run verify:resolver` proves the
 resolver still fires.
 
 ### `expects` and `errorMatches`

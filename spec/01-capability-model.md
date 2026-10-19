@@ -91,6 +91,22 @@ render the right SQL and refuse when it cannot.
 1. An engine absent from the tables → **error**.
 2. An engine present but missing a capability the core needs → **error**.
 3. A capability combination the tables do not describe → **error**.
+4. A **path** that does not resolve → **error**, never a falsey value.
+
+Points 1–3 are the same rule at the contract's other edge. A fact that is absent
+must refuse to be guessed — and so must the *path* to it. `undefined` falling
+through to `false` is not merely imprecise, it **reads as a decision**: "this
+binding has no `affectedField`", inviting a renderer to pick a default envelope.
+So a resolver must **throw** on an unresolved path, and an unresolved `{token}`
+must fail its case rather than survive into the SQL as literal text.
+
+This was measured, twice. `{types.timestamptz}` (flat; the real path is
+`types.map.timestamptz`) reached the engine as literal SQL text and was refused
+for an unrelated reason; a typo'd `requires.path` merely skipped the case, which
+is indistinguishable from an engine that genuinely lacks the capability. Both now
+fail. `npm run verify:resolver` proves the resolver refuses — three negatives and
+three controls — and any implementation that writes its own resolver owes the
+same proof.
 
 Never a default dialect, never a silent fallback. A wrong-but-plausible
 statement is harder to find than a refusal.
