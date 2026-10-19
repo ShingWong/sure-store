@@ -136,3 +136,44 @@ the rest of the transaction runs inside it, which surfaces as a **missing lock**
 rather than as leaked SQL. The capability is real; the hazard sits beside it.
 Refusing the capability because its misuse is hazardous would refuse working
 code — see [01](01-capability-model.md) § *A trap is not a capability*.
+
+## Statement shape — measured on all three (FR-2)
+
+The facts a plain CRUD statement carries before any special feature enters it.
+Without `params` the contract cannot render an `INSERT` at all.
+
+| fact | sqlite | turso | postgres |
+|---|---|---|---|
+| placeholder (`params`) | `?` via node:sqlite; the engine also accepts `?NNN`, `:name`, `@name`, `$name` | `?`, `$1`, `:name` all bind | `$n` only — `?` and `:name` are syntax errors |
+| bound `LIMIT`/`OFFSET` | ✅ `?` | ✅ | ✅ `$1`, `$2` |
+| server clock | `CURRENT_TIMESTAMP` | `CURRENT_TIMESTAMP` | `now()` (and `CURRENT_TIMESTAMP`) |
+| clock in a DDL `DEFAULT` | ✅ `CURRENT_TIMESTAMP`; `DEFAULT now()` is a syntax error | same | ✅ both |
+| **clock value** | **TEXT `"YYYY-MM-DD HH:MM:SS"`** | same | **`timestamp with time zone`**, microseconds + offset |
+| declared types | affinity — any name accepted, nothing enforced | same | native `TIMESTAMPTZ` / `BOOLEAN` / `JSONB` |
+| `jsonb` round-trip | TEXT | TEXT | stays `jsonb` |
+| server version | `sqlite_version()` | `sqlite_version()` | `version()` |
+| identifier quote | `"` (backtick / `[bracket]` legacy) | `"` (same) | `"` only |
+| affected rows (`result`) | `changes` | `changes` | `rowCount` |
+| insert id (`result`) | `lastInsertRowid` | `lastInsertRowid` | — (comes back via `RETURNING`) |
+
+Three findings worth more than the table:
+
+1. **The clock's real content is the value, not the name.** Substituting
+   `CURRENT_TIMESTAMP` for `now()` changes the *type* (TEXT vs timestamptz), the
+   *precision* (seconds vs microseconds) and the *timezone* (absent vs present).
+   This is the stemming finding again — a name substitution that hides a
+   semantic difference. `clock.valueType` / `precision` / `timezone` are declared
+   so a consumer sees it *before* choosing.
+2. **`types` is enforced on Postgres and advisory on SQLite.** SQLite assigns
+   affinity and accepts any type name, so there is nothing to refuse — an unknown
+   type is not an error there, and `enforced: false` says so rather than
+   pretending to a fail-closed check that cannot exist. The load-bearing fact is
+   not the alias but that `jsonb` becomes TEXT, so **jsonb operators are
+   unavailable** on the embedded engines.
+3. **`params` and `result` are binding facts**, and live under `bindings` — see
+   [01](01-capability-model.md) § *Engine facts and binding facts are different*.
+
+`identifierQuote` is `"` everywhere, so it is portable today. It is declared
+because an undeclared axis that happens to be portable is exactly the situation
+[01](01-capability-model.md) forbids — and because SQLite *also* accepts backtick
+and `[bracket]`, which a renderer must not use or it stops being portable.

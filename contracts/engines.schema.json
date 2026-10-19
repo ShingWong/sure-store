@@ -13,9 +13,37 @@
       "type": "object",
       "minProperties": 1,
       "additionalProperties": { "$ref": "#/definitions/engine" }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "$ref": "#/definitions/binding" }
+        ]
+      }
     }
   },
   "definitions": {
+    "binding": {
+      "type": "object",
+      "required": ["engine", "params", "result"],
+      "properties": {
+        "engine": { "type": "string" },
+        "params": { "enum": ["positional-q", "positional-dollar", "mixed", "named"] },
+        "paramsNote": { "type": "string" },
+        "result": {
+          "type": "object",
+          "required": ["affectedField", "rowsField"],
+          "properties": {
+            "affectedField": { "type": "string" },
+            "insertIdField": { "type": ["string", "null"] },
+            "rowsField": { "type": "string" }
+          }
+        },
+        "resultNote": { "type": "string" }
+      }
+    },
     "engine": {
       "type": "object",
       "required": ["kind", "conformance", "identity", "schemaVersion", "columnProbe", "fts"],
@@ -86,6 +114,32 @@
           "type": "array",
           "items": { "enum": ["btree", "partial", "expression", "fts", "gin"] }
         },
+        "clock": {
+          "type": "object",
+          "required": ["serverNow", "valueType", "ddlDefault"],
+          "properties": {
+            "serverNow": { "type": "string" },
+            "alsoAccepts": { "type": "array", "items": { "type": "string" } },
+            "valueType": { "type": "string" },
+            "precision": { "enum": ["seconds", "milliseconds", "microseconds", "nanoseconds"] },
+            "timezone": { "type": "boolean" },
+            "ddlDefault": { "type": "boolean" },
+            "ddlDefaultNow": { "type": "boolean" },
+            "traps": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "types": {
+          "type": "object",
+          "required": ["enforced", "map"],
+          "properties": {
+            "enforced": { "type": "boolean" },
+            "map": { "type": "object", "additionalProperties": { "type": "string" } },
+            "note": { "type": "string" }
+          }
+        },
+        "serverInfo": { "type": ["string", "null"] },
+        "identifierQuote": { "type": "string", "minLength": 1 },
+        "identifierNote": { "type": "string" },
         "fts": {
           "type": "object",
           "required": ["storage", "ddl", "sync", "match", "semantics"],

@@ -11,6 +11,9 @@ They exist so a claim can be **re-run**, not trusted — see AGENTS.md.
 | `tx-matrix.mjs` | sqlite + turso | `node verification/live/tx-matrix.mjs` |
 | `tx-matrix-pg.sh` | postgres | `sudo bash verification/live/tx-matrix-pg.sh` (needs a local server) |
 | `sqlite-fts5-sync.cjs` | sqlite | `node verification/live/sqlite-fts5-sync.cjs` — the external-content sync forms |
+| `stmt-shape.mjs` | sqlite + turso | `node verification/live/stmt-shape.mjs` — FR-2's six axes |
+| `stmt-shape-pg.sh` | postgres | `sudo bash verification/live/stmt-shape-pg.sh` |
+| `stmt-shape-pg-driver.cjs` | postgres (driver) | needs `pg`; run as the `postgres` OS user so peer auth works — it measures the *result envelope*, which is a binding fact |
 
 `sqlite.mjs` and `turso.mjs` are **contract-driven**: they render the SQL from
 `contracts/engines.json`, so they prove the table *and* the reference renderer
@@ -32,6 +35,14 @@ writes into the table.
   otherwise — `RETURNING` works on modern SQLite, a partial unique index **is**
   expressible on Turso, and `BEGIN IMMEDIATE` is the SQLite/Turso construct that
   Postgres rejects (not the other way round).
+- **`stmt-shape.mjs`**: two of FR-2's asks turned out to be **binding** facts, not
+  engine facts. SQLite's engine accepts `$1` and `:name`, but `node:sqlite` binds
+  positionally so both fail through it (*column index out of range*); and the
+  affected-row count is `changes` on both SQLite-family bindings against
+  `rowCount` on `pg`. They now live under `bindings`, not `engines`. Also
+  measured: `CURRENT_TIMESTAMP` returns **TEXT, no subsecond, no timezone** on the
+  embedded engines where Postgres `now()` returns a native `timestamptz` — so the
+  clock axis is a *value* difference, not a name difference.
 
 ## Not runnable here
 

@@ -38,6 +38,27 @@
         "onConflictDoNothing": true
       },
       "indexKinds": ["btree", "partial", "expression", "fts"],
+      "clock": {
+        "serverNow": "CURRENT_TIMESTAMP",
+        "alsoAccepts": [],
+        "valueType": "text",
+        "precision": "seconds",
+        "timezone": false,
+        "ddlDefault": true,
+        "ddlDefaultNow": false,
+        "traps": [
+          "now() does not exist (no such function), and DEFAULT now() is a syntax error.",
+          "CURRENT_TIMESTAMP evaluates to TEXT, 'YYYY-MM-DD HH:MM:SS' — no subsecond, no timezone. A name substitution from Postgres now() silently changes the value's type and precision, not just its spelling."
+        ]
+      },
+      "types": {
+        "enforced": false,
+        "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
+        "note": "SQLite assigns AFFINITY and accepts any type name verbatim, so nothing here is enforced — the map is a RECOMMENDATION, not a constraint, and an unknown type is not an error. The load-bearing fact is jsonb -> TEXT: jsonb operators are unavailable."
+      },
+      "serverInfo": "SELECT sqlite_version() AS v",
+      "identifierQuote": "\"",
+      "identifierNote": "The double quote is the portable one. Backtick and [bracket] also parse on SQLite-family engines as legacy forms — a renderer must not use them, or it stops being portable.",
       "fts": {
         "storage": "virtual-table",
         "ddl": "CREATE VIRTUAL TABLE IF NOT EXISTS {name} USING fts5({cols}, content='{table}', content_rowid='rowid', tokenize='{config}')",
@@ -89,6 +110,27 @@
         "onConflictDoNothing": true
       },
       "indexKinds": ["btree", "partial", "expression", "fts"],
+      "clock": {
+        "serverNow": "CURRENT_TIMESTAMP",
+        "alsoAccepts": [],
+        "valueType": "text",
+        "precision": "seconds",
+        "timezone": false,
+        "ddlDefault": true,
+        "ddlDefaultNow": false,
+        "traps": [
+          "now() does not exist, and DEFAULT now() is a syntax error.",
+          "CURRENT_TIMESTAMP evaluates to TEXT, 'YYYY-MM-DD HH:MM:SS' — no subsecond, no timezone. A name substitution from Postgres now() silently changes the value's type and precision, not just its spelling."
+        ]
+      },
+      "types": {
+        "enforced": false,
+        "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
+        "note": "AFFINITY, as on sqlite: any type name is accepted, nothing is enforced. jsonb -> TEXT means jsonb operators are unavailable."
+      },
+      "serverInfo": "SELECT sqlite_version() AS v",
+      "identifierQuote": "\"",
+      "identifierNote": "The double quote is the portable one; backtick and [bracket] also parse here as legacy forms and must not be used.",
       "fts": {
         "storage": "index",
         "ddl": "CREATE INDEX IF NOT EXISTS {name} ON {table} USING fts ({cols})",
@@ -149,6 +191,26 @@
         "onConflictDoNothing": true
       },
       "indexKinds": ["btree", "partial", "expression", "gin"],
+      "clock": {
+        "serverNow": "now()",
+        "alsoAccepts": ["CURRENT_TIMESTAMP"],
+        "valueType": "timestamp with time zone",
+        "precision": "microseconds",
+        "timezone": true,
+        "ddlDefault": true,
+        "ddlDefaultNow": true,
+        "traps": [
+          "now() and CURRENT_TIMESTAMP are interchangeable here — unlike the embedded engines, where only CURRENT_TIMESTAMP exists and it returns TEXT."
+        ]
+      },
+      "types": {
+        "enforced": true,
+        "map": { "timestamptz": "TIMESTAMPTZ", "boolean": "BOOLEAN", "jsonb": "JSONB" },
+        "note": "Native types, and jsonb round-trips as jsonb — so jsonb operators are available here and unavailable on the embedded engines."
+      },
+      "serverInfo": "SELECT version() AS v",
+      "identifierQuote": "\"",
+      "identifierNote": "Double quote only — backtick and [bracket] are syntax errors.",
       "fts": {
         "storage": "generated-column",
         "ddl": "ALTER TABLE {table} ADD COLUMN {name} tsvector GENERATED ALWAYS AS (to_tsvector('{config}', {expr})) STORED",
@@ -172,6 +234,28 @@
           "Hand-built to_tsquery('simple', 'a & b') THROWS on a term carrying tsquery metacharacters (syntax error in tsquery). Use plainto_tsquery, which takes the terms as plain text and produces the identical query for ordinary input — measured."
         ]
       }
+    }
+  },
+  "bindings": {
+    "note": "PARAMS and RESULT are BINDING facts, not engine facts — measured, and declaring them per ENGINE would be wrong. Evidence: SQLite's engine accepts `?`, `?NNN`, `:name`, `@name` and `$name`, but node:sqlite binds POSITIONALLY, so only `?` works through it (measured: `$1` and `:name` fail with 'column index out of range'). And the affected-row count is reported as `changes` by both SQLite-family bindings and as `rowCount` by pg, for the same underlying engine capability.",
+    "node:sqlite": {
+      "engine": "sqlite",
+      "params": "positional-q",
+      "paramsNote": "Only `?` binds. The engine accepts more styles; this binding does not expose them positionally.",
+      "result": { "affectedField": "changes", "insertIdField": "lastInsertRowid", "rowsField": "rows" }
+    },
+    "@tursodatabase/database/compat": {
+      "engine": "turso",
+      "params": "mixed",
+      "paramsNote": "`?`, `$1` and `:name` all bind (measured).",
+      "result": { "affectedField": "changes", "insertIdField": "lastInsertRowid", "rowsField": "rows" }
+    },
+    "pg": {
+      "engine": "postgres",
+      "params": "positional-dollar",
+      "paramsNote": "`$n` only — `?` and `:name` are syntax errors (measured via PREPARE). Bound `LIMIT $1 OFFSET $2` is accepted.",
+      "result": { "affectedField": "rowCount", "insertIdField": null, "rowsField": "rows" },
+      "resultNote": "No insertId field: an id comes back through RETURNING, not from the result envelope (measured on pg 8.23.0)."
     }
   }
 }

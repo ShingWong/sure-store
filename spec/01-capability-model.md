@@ -22,20 +22,43 @@ not have. A renderer that reads capabilities needs editing only when a genuinely
 | `tx.*` | how a transaction is opened, and **who owns it** |
 | `dml` | which post-write and post-conflict forms exist (`RETURNING`, `ON CONFLICT`) |
 | `indexKinds` | which indexer types the engine can materialise |
+| `clock` | what the engine's current timestamp is — and what it evaluates *to* |
+| `types` | how a declared column type materialises, and whether that is enforced |
+| `serverInfo` | the statement that reports the server version, if any |
+| `identifierQuote` | the quote character a renderer may use |
 | `fts.storage` | how the search index is materialised |
 | `fts.sync` | who keeps the index current — the core, or the engine |
 | `fts.match` | how a match expression is written |
 | `fts.semantics` | what the search *means* (tokenizer or text-search config) |
 | `fts.ranking` | how results are ordered, if at all |
 
-Two of these change the **shape** of what the core emits, not merely the text:
+### Engine facts and binding facts are different
+
+Two of the things a renderer needs are **not** properties of the engine:
+
+| binding fact | why it is not an engine fact |
+|---|---|
+| `params` — the placeholder style | SQLite's engine accepts `?`, `?NNN`, `:name`, `@name` and `$name`; `node:sqlite` binds **positionally**, so only `?` works through it. Measured: `$1` and `:name` fail there with *column index out of range*. |
+| `result` — the affected-row / insert-id envelope | Both SQLite-family bindings report `changes`; `pg` reports `rowCount`. Same engine capability, two driver shapes. |
+
+So they live in a top-level **`bindings`** section, keyed by driver, each naming
+its engine. Declaring them per engine would be a category error — and it is the
+kind that looks right until a second driver for the same engine appears.
+
+Everything else in the table is an engine fact and lives under `engines.<name>`.
+
+### What changes the shape of what the core emits
+
+Three entries are not value substitutions:
 
 - **`fts.sync`** — where the engine maintains its own index, the core emits
   *fewer* statements; the sync pair is deleted rather than translated.
 - **`tx.txOwnership`** — `driver-managed` means the core emits **no** transaction
   statements at all, and the `tx` capabilities describe the driver's frame
-  instead of the core's. This is the axis carrying the behavioural weight, the
-  way `fts.sync` carries it for search.
+  instead of the core's.
+- **`params` / `result`** — a binding fact, so it is the *host's* frame that
+  decides, and the core renders against the binding it was told about rather
+  than against the engine.
 
 Everything else is a value substitution.
 
