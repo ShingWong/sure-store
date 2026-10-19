@@ -1,0 +1,85 @@
+{
+  "specVersion": "0.1.0",
+  "note": "Language-neutral expectations. A renderer in ANY language is correct when it satisfies these, and not before. Inputs are the ones the core actually produces: terms already split on whitespace with quotes stripped.",
+  "matchParam": [
+    {
+      "why": "single term",
+      "terms": ["invoice"],
+      "sqlite": "\"invoice\"",
+      "turso": "\"invoice\"",
+      "postgres": "invoice"
+    },
+    {
+      "why": "several terms: a conjunction in every dialect",
+      "terms": ["invoice", "attached"],
+      "sqlite": "\"invoice\" \"attached\"",
+      "turso": "\"invoice\" \"attached\"",
+      "postgres": "invoice attached"
+    },
+    {
+      "why": "the core strips quotes, so user input cannot break the expression",
+      "terms": ["a\"b"],
+      "sqlite": "\"ab\"",
+      "turso": "\"ab\"",
+      "postgres": "a\"b"
+    },
+    {
+      "why": "terms the engine tokenises as one token must stay one term",
+      "terms": ["billing@vendor.com"],
+      "sqlite": "\"billing@vendor.com\"",
+      "turso": "\"billing@vendor.com\"",
+      "postgres": "billing@vendor.com"
+    }
+  ],
+  "ftsDdl": {
+    "input": {
+      "name": "messages_fts",
+      "table": "messages",
+      "cols": ["subject", "fromaddr", "body_text"]
+    },
+    "sqlite": [
+      "CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(subject, fromaddr, body_text, content='messages', content_rowid='rowid', tokenize='unicode61')"
+    ],
+    "turso": [
+      "CREATE INDEX IF NOT EXISTS messages_fts ON messages USING fts (subject, fromaddr, body_text)"
+    ],
+    "postgres": [
+      "ALTER TABLE messages ADD COLUMN messages_fts tsvector GENERATED ALWAYS AS (to_tsvector('simple', coalesce(subject,'') || ' ' || coalesce(fromaddr,'') || ' ' || coalesce(body_text,''))) STORED",
+      "CREATE INDEX IF NOT EXISTS messages_fts_idx ON messages USING GIN (messages_fts)"
+    ]
+  },
+  "ftsSync": {
+    "why": "engine-maintained indexes are a DELETION, not a translation: the core emits fewer statements",
+    "sqlite": 2,
+    "turso": 0,
+    "postgres": 0
+  },
+  "search": {
+    "input": {
+      "table": "messages",
+      "name": "messages_fts",
+      "cols": ["subject", "fromaddr", "body_text"],
+      "select": "m.uid, m.folder, m.subject, m.fromaddr, m.internaldate",
+      "orderBy": "m.internaldate",
+      "terms": ["invoice"],
+      "limit": 50
+    },
+    "why": "select and orderBy are identical across engines because every dialect aliases the table as m",
+    "sqlite": {
+      "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages_fts f JOIN messages m ON m.rowid = f.rowid WHERE messages_fts MATCH ? ORDER BY m.internaldate DESC LIMIT ?",
+      "params": ["\"invoice\"", 50]
+    },
+    "turso": {
+      "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages m WHERE fts_match(subject, fromaddr, body_text, ?) ORDER BY m.internaldate DESC LIMIT ?",
+      "params": ["\"invoice\"", 50]
+    },
+    "postgres": {
+      "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages m WHERE messages_fts @@ plainto_tsquery('simple', ?) ORDER BY m.internaldate DESC LIMIT ?",
+      "params": ["invoice", 50]
+    }
+  },
+  "failClosed": {
+    "why": "an engine the tables do not describe must throw, never fall back to a default dialect",
+    "unknownEngine": "mysql"
+  }
+}

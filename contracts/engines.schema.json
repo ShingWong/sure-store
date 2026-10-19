@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ShingWong/sure-store/contracts/engines.schema.json",
+  "title": "sure-store engine contracts",
+  "type": "object",
+  "required": ["specVersion", "engines"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "specVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "note": { "type": "string" },
+    "engines": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/engine" }
+    }
+  },
+  "definitions": {
+    "engine": {
+      "type": "object",
+      "required": ["kind", "conformance", "identity", "schemaVersion", "columnProbe", "fts"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": { "enum": ["embedded", "server"] },
+        "fileFormat": { "type": ["string", "null"] },
+        "conformance": { "enum": ["core", "search"] },
+        "network": { "type": "boolean" },
+        "identity": {
+          "type": "object",
+          "required": ["strategy", "ddl", "autoAssigns"],
+          "properties": {
+            "strategy": { "enum": ["rowid-alias", "identity", "serial"] },
+            "ddl": { "type": "string" },
+            "autoAssigns": { "type": "boolean" }
+          }
+        },
+        "schemaVersion": {
+          "type": "object",
+          "required": ["strategy", "read", "write"],
+          "properties": {
+            "strategy": { "enum": ["pragma", "table"] },
+            "table": { "type": "string" },
+            "read": { "type": "string" },
+            "write": { "type": "string" }
+          }
+        },
+        "columnProbe": {
+          "type": "object",
+          "required": ["strategy", "sql"],
+          "properties": {
+            "strategy": { "enum": ["pragma-table-info", "information-schema"] },
+            "sql": { "type": "string" }
+          }
+        },
+        "tx": {
+          "type": "object",
+          "required": ["start", "commit", "abort", "savepoint", "txOwnership"],
+          "properties": {
+            "start": { "type": "string" },
+            "startImmediate": { "type": ["string", "null"] },
+            "commit": { "type": "string" },
+            "abort": { "type": "string" },
+            "savepoint": { "type": "boolean" },
+            "isolationLevels": {
+              "type": "array",
+              "items": { "enum": ["read-committed", "repeatable-read", "serializable"] }
+            },
+            "forUpdate": { "type": "boolean" },
+            "advisoryLock": { "type": "boolean" },
+            "txOwnership": {
+              "type": "array",
+              "items": { "enum": ["caller-issued", "driver-managed"] }
+            },
+            "traps": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "dml": {
+          "type": "object",
+          "properties": {
+            "returning": { "type": "boolean" },
+            "onConflictDoUpdate": { "type": "boolean" },
+            "onConflictDoNothing": { "type": "boolean" }
+          }
+        },
+        "indexKinds": {
+          "type": "array",
+          "items": { "enum": ["btree", "partial", "expression", "fts", "gin"] }
+        },
+        "fts": {
+          "type": "object",
+          "required": ["storage", "ddl", "sync", "match", "semantics"],
+          "properties": {
+            "storage": { "enum": ["virtual-table", "index", "generated-column"] },
+            "ddl": { "type": "string" },
+            "indexDdl": { "type": "string" },
+            "defaultConfig": { "type": "string" },
+            "configs": { "type": "array", "items": { "type": "string" } },
+            "sync": { "enum": ["core", "engine"] },
+            "match": {
+              "type": "object",
+              "required": ["param", "predicate", "searchFrom"],
+              "properties": {
+                "param": { "enum": ["quoted-phrases", "plain-text"] },
+                "predicate": { "type": "string" },
+                "searchFrom": { "type": "string" }
+              }
+            },
+            "semantics": { "enum": ["tokenizer", "engine-index", "text-search-config"] },
+            "prefixSearch": { "type": "boolean" },
+            "ranking": { "type": ["string", "null"] },
+            "requires": { "type": "array", "items": { "type": "string" } },
+            "traps": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

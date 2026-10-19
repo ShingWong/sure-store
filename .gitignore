@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tgz
+coverage/
+.DS_Store
+# live probes create throwaway databases; never commit them
+verification/.scratch/

@@ -1,0 +1,177 @@
+{
+  "$schema": "./engines.schema.json",
+  "specVersion": "0.1.0",
+  "note": "Every value here was measured against a live engine. See spec/02-engine-matrix.md for the probe that produced each one, and verification/live/ for the probes themselves. Do not edit from memory — re-run the probe.",
+  "engines": {
+    "sqlite": {
+      "kind": "embedded",
+      "fileFormat": "sqlite3",
+      "conformance": "search",
+      "identity": {
+        "strategy": "rowid-alias",
+        "ddl": "INTEGER PRIMARY KEY",
+        "autoAssigns": true
+      },
+      "schemaVersion": {
+        "strategy": "pragma",
+        "read": "PRAGMA user_version",
+        "write": "PRAGMA user_version = {n}"
+      },
+      "columnProbe": {
+        "strategy": "pragma-table-info",
+        "sql": "SELECT name FROM pragma_table_info('{table}') WHERE name = ?"
+      },
+      "tx": {
+        "start": "BEGIN",
+        "startImmediate": "BEGIN IMMEDIATE",
+        "commit": "COMMIT",
+        "abort": "ROLLBACK",
+        "savepoint": true,
+        "isolationLevels": [],
+        "forUpdate": false,
+        "advisoryLock": false,
+        "txOwnership": ["caller-issued", "driver-managed"]
+      },
+      "dml": {
+        "returning": true,
+        "onConflictDoUpdate": true,
+        "onConflictDoNothing": true
+      },
+      "indexKinds": ["btree", "partial", "expression", "fts"],
+      "fts": {
+        "storage": "virtual-table",
+        "ddl": "CREATE VIRTUAL TABLE IF NOT EXISTS {name} USING fts5({cols}, content='{table}', content_rowid='rowid', tokenize='{config}')",
+        "defaultConfig": "unicode61",
+        "configs": ["unicode61"],
+        "sync": "core",
+        "match": {
+          "param": "quoted-phrases",
+          "predicate": "{name} MATCH ?",
+          "searchFrom": "{name} f JOIN {table} m ON m.rowid = f.rowid"
+        },
+        "semantics": "tokenizer",
+        "prefixSearch": true,
+        "ranking": null
+      }
+    },
+    "turso": {
+      "kind": "embedded",
+      "fileFormat": "sqlite3",
+      "conformance": "search",
+      "identity": {
+        "strategy": "rowid-alias",
+        "ddl": "INTEGER PRIMARY KEY",
+        "autoAssigns": true
+      },
+      "schemaVersion": {
+        "strategy": "pragma",
+        "read": "PRAGMA user_version",
+        "write": "PRAGMA user_version = {n}"
+      },
+      "columnProbe": {
+        "strategy": "pragma-table-info",
+        "sql": "SELECT name FROM pragma_table_info('{table}') WHERE name = ?"
+      },
+      "tx": {
+        "start": "BEGIN",
+        "startImmediate": "BEGIN IMMEDIATE",
+        "commit": "COMMIT",
+        "abort": "ROLLBACK",
+        "savepoint": true,
+        "isolationLevels": [],
+        "forUpdate": false,
+        "advisoryLock": false,
+        "txOwnership": ["caller-issued", "driver-managed"]
+      },
+      "dml": {
+        "returning": true,
+        "onConflictDoUpdate": true,
+        "onConflictDoNothing": true
+      },
+      "indexKinds": ["btree", "partial", "expression", "fts"],
+      "fts": {
+        "storage": "index",
+        "ddl": "CREATE INDEX IF NOT EXISTS {name} ON {table} USING fts ({cols})",
+        "sync": "engine",
+        "match": {
+          "param": "quoted-phrases",
+          "predicate": "fts_match({cols}, ?)",
+          "searchFrom": "{table} m"
+        },
+        "semantics": "engine-index",
+        "prefixSearch": false,
+        "ranking": "fts_score({cols}, ?)",
+        "requires": ["experimental:index_method"],
+        "traps": [
+          "fts_match's first argument is the COLUMN list, not the index name. Passing the index name parses and returns SILENTLY EMPTY.",
+          "The index is engine-maintained, so the external-content sync statements an fts5 table needs are deleted rather than translated."
+        ]
+      }
+    },
+    "postgres": {
+      "kind": "server",
+      "fileFormat": null,
+      "conformance": "search",
+      "network": true,
+      "identity": {
+        "strategy": "identity",
+        "ddl": "BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY",
+        "autoAssigns": true
+      },
+      "schemaVersion": {
+        "strategy": "table",
+        "table": "_sure_store_meta",
+        "read": "SELECT v FROM _sure_store_meta WHERE k = 'schema_version'",
+        "write": "INSERT INTO _sure_store_meta (k, v) VALUES ('schema_version', ?) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v"
+      },
+      "columnProbe": {
+        "strategy": "information-schema",
+        "sql": "SELECT count(*) FROM information_schema.columns WHERE table_name = ? AND column_name = ?"
+      },
+      "tx": {
+        "start": "BEGIN",
+        "startImmediate": null,
+        "commit": "COMMIT",
+        "abort": "ROLLBACK",
+        "savepoint": true,
+        "isolationLevels": ["read-committed", "repeatable-read", "serializable"],
+        "forUpdate": true,
+        "advisoryLock": true,
+        "txOwnership": ["driver-managed"],
+        "traps": [
+          "BEGIN IMMEDIATE is a SQLite construct; Postgres rejects it (syntax error).",
+          "A transaction is bound to the CONNECTION, not the pool. A transaction-local query issued on a pool handle runs autocommit while the rest of the tx runs inside it — measured as a missing FOR UPDATE lock, not as leaked SQL."
+        ]
+      },
+      "dml": {
+        "returning": true,
+        "onConflictDoUpdate": true,
+        "onConflictDoNothing": true
+      },
+      "indexKinds": ["btree", "partial", "expression", "gin"],
+      "fts": {
+        "storage": "generated-column",
+        "ddl": "ALTER TABLE {table} ADD COLUMN {name} tsvector GENERATED ALWAYS AS (to_tsvector('{config}', {expr})) STORED",
+        "indexDdl": "CREATE INDEX IF NOT EXISTS {name}_idx ON {table} USING GIN ({name})",
+        "defaultConfig": "simple",
+        "configs": ["simple", "english"],
+        "sync": "engine",
+        "match": {
+          "param": "plain-text",
+          "predicate": "{name} @@ plainto_tsquery('{config}', ?)",
+          "searchFrom": "{table} m"
+        },
+        "semantics": "text-search-config",
+        "prefixSearch": true,
+        "ranking": "ts_rank({name}, ?)",
+        "traps": [
+          "id INTEGER PRIMARY KEY PARSES and does NOT auto-assign. The DDL applies cleanly and inserts that omit id fail only at runtime.",
+          "PRAGMA user_version is a syntax error on read and write.",
+          "pragma_table_info does not exist; use information_schema.columns.",
+          "to_tsvector('english', ...) stems, so it matches more than unicode61 would. 'simple' is the parity config.",
+          "Hand-built to_tsquery('simple', 'a & b') THROWS on a term carrying tsquery metacharacters (syntax error in tsquery). Use plainto_tsquery, which takes the terms as plain text and produces the identical query for ordinary input — measured."
+        ]
+      }
+    }
+  }
+}

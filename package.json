@@ -1,0 +1,35 @@
+{
+  "name": "@shing.wong/sure-store",
+  "version": "0.1.0",
+  "description": "Engine-agnostic storage contract: dialect tables, escape vocabulary and a verification suite shared by sure-mail, sure-factor, memeng and pai-core.",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "ShingWong",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShingWong/sure-store.git"
+  },
+  "type": "module",
+  "main": "./impl/ts/index.ts",
+  "exports": {
+    ".": "./impl/ts/index.ts",
+    "./contracts": "./contracts/engines.json",
+    "./spec": "./spec/README.md"
+  },
+  "scripts": {
+    "verify": "node --experimental-strip-types verification/run-ts.mjs",
+    "test": "node --experimental-strip-types --test impl/ts/render.test.ts"
+  },
+  "keywords": [
+    "sqlite",
+    "turso",
+    "postgresql",
+    "fts5",
+    "tsvector",
+    "driver",
+    "odbc",
+    "storage"
+  ]
+}

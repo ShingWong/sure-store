@@ -1,0 +1,96 @@
+{
+  "specVersion": "0.1.0",
+  "id": "tx-atomic-audit-write",
+  "from": "FR-1 (mgmt-pg) — offered by the consumer that found it the hard way",
+  "appliesTo": "every engine whose `tx` block is present",
+  "invariant": "the audit row and the write that caused it commit or roll back together, or neither happened",
+  "why": "A transaction belongs to the CONNECTION, not the pool. A transaction-local query issued on a pool handle runs autocommit while the rest of the transaction runs inside it. That surfaced in practice as a MISSING FOR UPDATE LOCK — not as leaked SQL — and was misread once before it was caught. A dialect-level suite is the only place this can be pinned once for every engine.",
+  "schema": [
+    "CREATE TABLE item (id INTEGER PRIMARY KEY, name TEXT NOT NULL)",
+    "CREATE TABLE audit (id INTEGER PRIMARY KEY, item_id INTEGER, note TEXT NOT NULL)"
+  ],
+  "cases": [
+    {
+      "id": "commit-both",
+      "steps": [
+        "BEGIN",
+        "INSERT INTO item (id, name) VALUES (1, 'a')",
+        "INSERT INTO audit (item_id, note) VALUES (1, 'created')",
+        "COMMIT"
+      ],
+      "assert": [
+        "SELECT COUNT(*) FROM item  = 1",
+        "SELECT COUNT(*) FROM audit = 1"
+      ]
+    },
+    {
+      "id": "abort-both",
+      "steps": [
+        "BEGIN",
+        "INSERT INTO item (id, name) VALUES (1, 'a')",
+        "INSERT INTO audit (item_id, note) VALUES (1, 'created')",
+        "ROLLBACK"
+      ],
+      "assert": [
+        "SELECT COUNT(*) FROM item  = 0",
+        "SELECT COUNT(*) FROM audit = 0"
+      ]
+    },
+    {
+      "id": "audit-failure-rolls-back-the-write",
+      "why": "the injected failure must SURFACE, not be swallowed — a handler that discards store errors makes this test vacuous",
+      "steps": [
+        "BEGIN",
+        "INSERT INTO item (id, name) VALUES (1, 'a')",
+        "INSERT INTO audit (item_id, note) VALUES (1, NULL)",
+        "ROLLBACK"
+      ],
+      "assert": [
+        "the NOT NULL violation is reported to the caller",
+        "SELECT COUNT(*) FROM item = 0"
+      ]
+    },
+    {
+      "id": "savepoint-nesting",
+      "requires": "tx.savepoint",
+      "steps": [
+        "BEGIN",
+        "INSERT INTO item (id, name) VALUES (1, 'a')",
+        "SAVEPOINT sp",
+        "INSERT INTO item (id, name) VALUES (2, 'b')",
+        "ROLLBACK TO sp",
+        "RELEASE sp",
+        "COMMIT"
+      ],
+      "assert": [
+        "SELECT COUNT(*) FROM item = 1",
+        "the outer write survives; the inner one does not"
+      ]
+    },
+    {
+      "id": "forUpdate-runs-inside-the-transaction",
+      "requires": "tx.forUpdate",
+      "steps": [
+        "BEGIN",
+        "SELECT id FROM item WHERE id = 1 FOR UPDATE",
+        "COMMIT"
+      ],
+      "assert": [
+        "the lock is taken within the transaction — a pool-handle statement here would run autocommit and take no lock"
+      ]
+    },
+    {
+      "id": "isolation-is-settable",
+      "requires": "tx.isolationLevels",
+      "steps": [
+        "BEGIN",
+        "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+        "COMMIT"
+      ],
+      "assert": [
+        "the level is accepted, or the engine declares no isolationLevels and the case is SKIPPED"
+      ]
+    }
+  ],
+  "runnerObligation": "Run each case on a FRESH database. Assert the `requires` capability against contracts/engines.json FIRST: a case whose capability the engine does not declare is SKIPPED, never failed. A skip must be reported as a skip, because 'this engine cannot express it' and 'this engine failed it' are different facts and only one of them is a defect."
+}
