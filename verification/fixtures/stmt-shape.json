@@ -1,92 +1,100 @@
 {
   "specVersion": "0.1.0",
   "id": "stmt-shape",
-  "from": "FR-2 (mgmt-pg), as contributed; case format fixed before landing — see notes below",
+  "from": "FR-2 (mgmt-pg), as contributed; case format fixed and checks added before landing",
   "appliesTo": "every engine entry whose clock/types blocks are present, plus every entry in bindings",
-  "format": "See verification/fixtures/README.md. Two mechanisms were added while landing this set and are explained there: `requires` can assert a capability is ABSENT (so a case can describe an engine that lacks it), and `expects: \"reject\"` lets a case assert a refusal instead of a result.",
+  "format": "See verification/fixtures/README.md. Three additions were made while landing this set: `requires` can assert a capability is ABSENT (so a case can describe an engine that lacks it), `expects: \"reject\"` lets a case pin a refusal, and `check` makes the assertion machine-readable. The `assert` prose carries cross-engine truth the runner cannot reach.",
+  "checkScope": "`check` is asserted on the engines this runner can reach (sqlite always, turso when its driver is installed). Postgres is skipped — this runner is dependency-free — so its shape is documented in `assert` and verified by verification/live/postgres.sql.",
+  "schema": [
+    "CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT, active {types.map.boolean}, expires_at {types.map.timestamptz}, doc {types.map.jsonb})"
+  ],
   "cases": [
     {
       "id": "insert-with-bound-limit",
       "scope": "binding",
-      "why": "a bound LIMIT/OFFSET slot is a BINDING fact: the statement text carries {ph}, which the runner renders from bindings.<name>.params",
-      "steps": ["SELECT 1 LIMIT {ph} OFFSET {ph}"],
+      "why": "a bound LIMIT/OFFSET slot is a BINDING fact: the statement carries {ph}, which the runner renders from this binding's `params` style",
+      "steps": ["SELECT 1 AS v LIMIT {ph} OFFSET {ph}"],
       "binds": [1, 0],
       "expects": "ok",
+      "check": { "first": { "v": 1 } },
       "assert": ["the engine accepts bound parameters in LIMIT/OFFSET slots"]
     },
     {
       "id": "server-now-value-shape",
-      "steps": ["SELECT {clock.serverNow} AS v"],
+      "why": "guarded to the TEXT shape so the case is runnable without a pg driver. The postgres shape is the other half: timestamp with time zone, microseconds, tz-aware.",
+      "requires": { "path": "clock.valueType", "equals": "text" },
+      "steps": ["SELECT {clock.serverNow} AS v, typeof({clock.serverNow}) AS ty"],
       "expects": "ok",
+      "check": { "first": { "ty": "text" } },
       "assert": [
-        "the value matches the declared clock.valueType / precision / timezone:",
-        "valueType 'timestamp with time zone' -> microsecond precision, tz-aware",
-        "valueType 'text' -> 'YYYY-MM-DD HH:MM:SS', second precision, no tz",
-        "assert on the READING (typeof / pg_typeof), never on the spelling of the call"
+        "the value is TEXT with second precision and no timezone — no subsecond, no offset",
+        "postgres returns a native timestamp with time zone at microsecond precision instead"
       ]
     },
     {
       "id": "clock-comparison-in-where",
-      "why": "the comparison must survive the declared valueType. `<=` is used rather than `>` so the case is deterministic across precisions: the stored value was taken before the query's own now.",
+      "why": "`<=` rather than `>` keeps the case deterministic across precisions: the stored value was taken before the query's own now.",
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, expires_at {types.timestamptz})",
         "INSERT INTO t (id, expires_at) VALUES (1, {clock.serverNow})",
         "SELECT id FROM t WHERE expires_at <= {clock.serverNow}"
       ],
       "expects": "ok",
-      "assert": ["1 row returned — the stored value and the query's now are comparable under the declared valueType"]
+      "check": { "rows": 1 },
+      "assert": ["the stored value and the query's now are comparable under the declared valueType"]
     },
     {
       "id": "default-current-timestamp",
       "requires": { "path": "clock.ddlDefault" },
       "steps": [
-        "CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.timestamptz} NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+        "CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.map.timestamptz} NOT NULL DEFAULT CURRENT_TIMESTAMP)",
         "INSERT INTO ts (id) VALUES (1)",
         "SELECT at FROM ts WHERE id = 1"
       ],
       "expects": "ok",
-      "assert": ["at is populated — DEFAULT CURRENT_TIMESTAMP is the portable suffix, measured true on all three"]
+      "check": { "rows": 1 },
+      "assert": ["DEFAULT CURRENT_TIMESTAMP is the portable suffix — measured true on all three"]
     },
     {
       "id": "default-now-accepted",
       "requires": { "path": "clock.ddlDefaultNow" },
-      "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.timestamptz} NOT NULL DEFAULT now())"],
+      "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.map.timestamptz} NOT NULL DEFAULT now())"],
       "expects": "ok",
       "assert": ["DEFAULT now() is accepted — postgres only"]
     },
     {
       "id": "default-now-rejected",
-      "why": "the ABSENT half of the previous case. `equals: false` is what makes it run on exactly the engines that declare ddlDefaultNow false; a case that merely required the capability would SKIP there and assert nothing.",
+      "why": "the ABSENT half. `equals: false` is what makes it run on exactly the engines that declare ddlDefaultNow false; requiring the capability instead would SKIP there and assert nothing.",
       "requires": { "path": "clock.ddlDefaultNow", "equals": false },
-      "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.timestamptz} NOT NULL DEFAULT now())"],
+      "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.map.timestamptz} NOT NULL DEFAULT now())"],
       "expects": "reject",
+      "errorMatches": "syntax",
       "assert": ["the DDL is refused — DEFAULT now() is a syntax error where ddlDefaultNow is false"]
     },
     {
       "id": "boolean-round-trip",
       "requires": { "path": "types.enforced" },
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, active {types.boolean})",
         "INSERT INTO t (id, active) VALUES (1, TRUE)",
         "SELECT active FROM t WHERE id = 1"
       ],
       "expects": "ok",
-      "assert": ["the value round-trips truthy — BOOLEAN natively on an enforcing engine"]
+      "check": { "first": { "active": true } },
+      "assert": ["the value round-trips as a real BOOLEAN on an enforcing engine"]
     },
     {
       "id": "boolean-affinity",
       "requires": { "path": "types.enforced", "equals": false },
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, active {types.boolean})",
         "INSERT INTO t (id, active) VALUES (1, TRUE)",
         "SELECT active, typeof(active) AS ty FROM t"
       ],
       "expects": "ok",
+      "check": { "first": { "active": 1, "ty": "integer" } },
       "assert": ["active reads 1 with typeof 'integer' — affinity, not a boolean type (measured on sqlite and turso)"]
     },
     {
       "id": "unknown-type-name-is-not-an-error",
-      "why": "the fail-closed rule does NOT apply where types.enforced is false, and this case proves the contract says so instead of pretending otherwise.",
+      "why": "fail-closed does NOT apply where types.enforced is false, and this case proves the contract says so instead of pretending otherwise.",
       "requires": { "path": "types.enforced", "equals": false },
       "steps": ["CREATE TABLE z (a FLOOBLE)"],
       "expects": "ok",
@@ -96,35 +104,34 @@
       "id": "jsonb-extraction",
       "requires": { "path": "types.map.jsonb" },
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, doc {types.map.jsonb})",
         "INSERT INTO t (id, doc) VALUES (1, '{\"a\":1}')",
         "SELECT doc ->> 'a' AS v FROM t"
       ],
       "expects": "ok",
-      "assert": ["v is 1 — -> and ->> work on ALL THREE, including the embedded engines (measured)"]
+      "check": { "first": { "v": 1 } },
+      "assert": ["->> works on ALL THREE, including the embedded engines (SQLite 3.38+)"]
     },
     {
       "id": "jsonb-containment-accepted",
       "requires": { "path": "types.map.jsonb", "equals": "JSONB" },
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, doc {types.map.jsonb})",
         "INSERT INTO t (id, doc) VALUES (1, '{\"a\":1}')",
         "SELECT doc @> '{\"a\":1}' AS v FROM t"
       ],
       "expects": "ok",
-      "assert": ["@> is true — native jsonb"]
+      "assert": ["@> containment works — native jsonb"]
     },
     {
       "id": "jsonb-containment-rejected",
-      "why": "the operator surface is where jsonb actually differs, not extraction. Asserting this keeps the difference from being over-stated the other way.",
+      "why": "the operator surface is where jsonb actually differs, not extraction. Asserting this keeps the difference from being over-stated in the other direction.",
       "requires": { "path": "types.map.jsonb", "equals": "TEXT" },
       "steps": [
-        "CREATE TABLE t (id INTEGER PRIMARY KEY, doc {types.map.jsonb})",
         "INSERT INTO t (id, doc) VALUES (1, '{\"a\":1}')",
         "SELECT doc @> '{\"a\":1}' AS v FROM t"
       ],
       "expects": "reject",
-      "assert": ["@> is refused — unrecognized token on the embedded engines"]
+      "errorMatches": "unrecognized token",
+      "assert": ["@> is refused — unknown token on the embedded engines"]
     },
     {
       "id": "result-envelope-fields",
@@ -133,10 +140,10 @@
       "requires": { "path": "result.affectedField" },
       "steps": ["INSERT INTO t (id, name) VALUES (1, 'a')"],
       "expects": "ok",
+      "check": { "fields": ["changes", "lastInsertRowid"] },
       "assert": [
-        "the driver's result carries the field named by result.affectedField",
-        "when result.insertIdField is null, an id must come back via RETURNING instead",
-        "assert the DECLARED name against the field the binding actually reports"
+        "the driver result carries the field named by result.affectedField",
+        "when result.insertIdField is null (pg), an id must come back via RETURNING instead"
       ]
     },
     {
@@ -144,15 +151,17 @@
       "requires": { "path": "identifierQuote" },
       "steps": ["SELECT 1 AS {identifierQuote}weird name{identifierQuote}"],
       "expects": "ok",
-      "assert": ["the quoted identifier round-trips, and a renderer emits only the declared quote character — never sqlite's legacy backtick or bracket forms"]
+      "check": { "rows": 1 },
+      "assert": ["the quoted identifier round-trips; a renderer emits only the declared quote, never sqlite's legacy backtick or bracket forms"]
     },
     {
       "id": "server-info-declared",
       "requires": { "path": "serverInfo" },
       "steps": ["{serverInfo}"],
       "expects": "ok",
+      "check": { "rows": 1 },
       "assert": ["the declared query returns a version-shaped value"]
     }
   ],
-  "runnerObligation": "Same as tx.json — a fresh database per case, and the `requires` check FIRST so a capability the engine lacks is SKIPPED, never failed. Additionally: resolve {ph} and every binding-scoped case against the `bindings` section, never against the engine; and honour `expects: 'reject'` by asserting that the statement is refused rather than by letting the error escape. A skip must be reported as a skip: 'cannot express it' and 'failed it' are different facts and only one is a defect."
+  "runnerObligation": "Same as tx.json — a fresh database per case, and `requires` checked FIRST so a capability the engine lacks is SKIPPED, never failed. Additionally: resolve {ph} and every binding-scoped case against the `bindings` section, never against the engine; and honour `expects: 'reject'` by asserting the refusal rather than letting the error escape."
 }

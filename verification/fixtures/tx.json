@@ -5,11 +5,11 @@
   "appliesTo": "every engine whose `tx` block is present",
   "invariant": "the audit row and the write that caused it commit or roll back together, or neither happened",
   "why": "A transaction belongs to the CONNECTION, not the pool. A transaction-local query issued on a pool handle runs autocommit while the rest of the transaction runs inside it. That surfaced in practice as a MISSING FOR UPDATE LOCK — not as leaked SQL — and was misread once before it was caught. A dialect-level suite is the only place this can be pinned once for every engine.",
+  "identity": "Every step inserts ids EXPLICITLY, so this fixture is identity-agnostic and needs no `identity.autoAssigns`. Do not assume ids appear for free: `id INTEGER PRIMARY KEY` parses on Postgres and does NOT auto-assign (spec/02 Trap 2), so a porting language that omits ids will fail here for the wrong reason.",
   "schema": [
     "CREATE TABLE item (id INTEGER PRIMARY KEY, name TEXT NOT NULL)",
     "CREATE TABLE audit (id INTEGER PRIMARY KEY, item_id INTEGER, note TEXT NOT NULL)"
   ],
-  "identity": "Every step inserts ids EXPLICITLY, so this fixture is identity-agnostic and needs no `identity.autoAssigns`. Do not assume ids appear for free: `id INTEGER PRIMARY KEY` parses on Postgres and does NOT auto-assign (spec/02 Trap 2), so a porting language that omits ids will fail here for the wrong reason.",
   "cases": [
     {
       "id": "commit-both",
@@ -17,12 +17,11 @@
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
         "INSERT INTO audit (item_id, note) VALUES (1, 'created')",
-        "COMMIT"
+        "COMMIT",
+        "SELECT (SELECT COUNT(*) FROM item) AS items, (SELECT COUNT(*) FROM audit) AS audits"
       ],
-      "assert": [
-        "SELECT COUNT(*) FROM item  = 1",
-        "SELECT COUNT(*) FROM audit = 1"
-      ]
+      "check": { "first": { "items": 1, "audits": 1 } },
+      "assert": ["both rows are present after COMMIT"]
     },
     {
       "id": "abort-both",
@@ -30,30 +29,28 @@
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
         "INSERT INTO audit (item_id, note) VALUES (1, 'created')",
-        "ROLLBACK"
+        "ROLLBACK",
+        "SELECT (SELECT COUNT(*) FROM item) AS items, (SELECT COUNT(*) FROM audit) AS audits"
       ],
-      "assert": [
-        "SELECT COUNT(*) FROM item  = 0",
-        "SELECT COUNT(*) FROM audit = 0"
-      ]
+      "check": { "first": { "items": 0, "audits": 0 } },
+      "assert": ["neither row survives ROLLBACK"]
     },
     {
       "id": "audit-failure-rolls-back-the-write",
-      "why": "the injected failure must SURFACE, not be swallowed — a handler that discards store errors makes this test vacuous",
+      "why": "the injected failure must SURFACE, not be swallowed — a handler that discards store errors makes this test vacuous. The failing step is marked rather than the case, because the case continues: the point is what ROLLBACK leaves behind.",
       "steps": [
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
-        "INSERT INTO audit (item_id, note) VALUES (1, NULL)",
-        "ROLLBACK"
+        { "sql": "INSERT INTO audit (item_id, note) VALUES (1, NULL)", "expects": "reject", "errorMatches": "null" },
+        "ROLLBACK",
+        "SELECT (SELECT COUNT(*) FROM item) AS items"
       ],
-      "assert": [
-        "the NOT NULL violation is reported to the caller",
-        "SELECT COUNT(*) FROM item = 0"
-      ]
+      "check": { "first": { "items": 0 } },
+      "assert": ["the NOT NULL violation is reported, and the item write is gone"]
     },
     {
       "id": "savepoint-nesting",
-      "requires": "tx.savepoint",
+      "requires": { "path": "tx.savepoint" },
       "steps": [
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
@@ -61,33 +58,24 @@
         "INSERT INTO item (id, name) VALUES (2, 'b')",
         "ROLLBACK TO sp",
         "RELEASE sp",
-        "COMMIT"
+        "COMMIT",
+        "SELECT COUNT(*) AS items FROM item"
       ],
-      "assert": [
-        "SELECT COUNT(*) FROM item = 1",
-        "the outer write survives; the inner one does not"
-      ]
+      "check": { "first": { "items": 1 } },
+      "assert": ["the outer write survives; the inner one does not"]
     },
     {
       "id": "forUpdate-runs-inside-the-transaction",
-      "requires": "tx.forUpdate",
-      "steps": [
-        "BEGIN",
-        "SELECT id FROM item WHERE id = 1 FOR UPDATE",
-        "COMMIT"
-      ],
+      "requires": { "path": "tx.forUpdate" },
+      "steps": ["BEGIN", "SELECT id FROM item WHERE id = 1 FOR UPDATE", "COMMIT"],
       "assert": [
         "the lock is taken within the transaction — a pool-handle statement here would run autocommit and take no lock"
       ]
     },
     {
       "id": "isolation-is-settable",
-      "requires": "tx.isolationLevels",
-      "steps": [
-        "BEGIN",
-        "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
-        "COMMIT"
-      ],
+      "requires": { "path": "tx.isolationLevels", "nonEmpty": true },
+      "steps": ["BEGIN", "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", "COMMIT"],
       "assert": [
         "the level is accepted, or the engine declares no isolationLevels and the case is SKIPPED"
       ]

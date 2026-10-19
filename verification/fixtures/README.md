@@ -1,12 +1,13 @@
 # Fixture format
 
-Fixtures are **language-neutral**: a list of cases with inputs and assertions, no
-code. A renderer or engine implementation in any language is correct when it
+Fixtures are **language-neutral**: cases with inputs and machine-readable checks,
+no code. A renderer or engine implementation in any language is correct when it
 satisfies them, and not before.
 
-`render.json` is a different shape — it asserts exact SQL strings against the
-reference renderer. Files like `tx.json` and `stmt-shape.json` are **behavioural**:
-they describe what an engine must *do*.
+- `render.json` asserts exact SQL strings against the reference renderer
+  (`verification/run-ts.mjs`).
+- `tx.json` and `stmt-shape.json` are **behavioural** and run against real
+  engines (`verification/run-behaviour.mjs`).
 
 ## A behavioural case
 
@@ -16,10 +17,11 @@ they describe what an engine must *do*.
   "scope": "engine",
   "why": "prose: why this case exists",
   "requires": { "path": "clock.ddlDefaultNow", "equals": false },
-  "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.timestamptz} DEFAULT now())"],
-  "binds": [],
+  "steps": ["CREATE TABLE ts (id INTEGER PRIMARY KEY, at {types.map.timestamptz} DEFAULT now())"],
   "expects": "reject",
-  "assert": ["the DDL is refused"]
+  "errorMatches": "syntax",
+  "check": { "rows": 0 },
+  "assert": ["prose: the cross-engine truth, including what the runner cannot reach"]
 }
 ```
 
@@ -28,14 +30,14 @@ they describe what an engine must *do*.
 | value | the case runs once per… | `requires` and `{…}` resolve against |
 |---|---|---|
 | `engine` (default) | entry in `engines` | the engine entry |
-| `binding` | entry in `bindings` | the binding entry, with `{engine.*}` available for its engine |
+| `binding` | entry in `bindings` | the binding, with the engine merged underneath |
 
-Binding-scoped cases exist because some facts are the driver's, not the engine's —
+Binding-scoped cases exist because some facts are the driver's, not the engine's:
 placeholder style and the result envelope. `params` and `result` must never be
-required from an engine entry; they are not there, and looking for them is the
+required from an engine entry — they are not there, and looking for them is the
 category error [spec/01](../../spec/01-capability-model.md) warns about.
 
-### `requires` — and the `equals` field
+### `requires` — and `equals` / `nonEmpty`
 
 `requires` gates whether the case runs at all.
 
@@ -43,32 +45,72 @@ category error [spec/01](../../spec/01-capability-model.md) warns about.
 |---|---|
 | absent | always |
 | `{ "path": "clock.ddlDefault" }` | the resolved value is truthy |
-| `{ "path": "clock.ddlDefaultNow", "equals": false }` | the resolved value is **falsey** |
-| `{ "path": "types.map.jsonb", "equals": "JSONB" }` | the resolved value equals `"JSONB"` |
+| `{ "path": "clock.ddlDefaultNow", "equals": false }` | the value is **falsey** |
+| `{ "path": "types.map.jsonb", "equals": "JSONB" }` | the value equals `"JSONB"` |
+| `{ "path": "tx.isolationLevels", "nonEmpty": true }` | the value is a non-empty array |
 
 **`equals: false` is not decoration.** A case that asserts an engine *lacks* a
 capability must run on exactly the engines that lack it. Requiring the capability
 instead makes the case SKIP there — it would pass by never executing, which is
-the most expensive kind of green.
+the most expensive kind of green. Three cases in the FR-2 set had this bug.
 
-### `expects`
+### `expects` and `errorMatches`
 
 | value | meaning |
 |---|---|
-| `"ok"` (default) | the steps must succeed, and `assert` holds |
-| `"reject"` | at least one step must be **refused** |
+| `"ok"` (default) | every step succeeds, and `check` holds |
+| `"reject"` | the **last** step must be refused |
 
-`reject` exists so a case can pin a limitation. Without it, a fixture author
-either cannot describe an engine that lacks something, or has to invert the
-contract to do it.
+A case-level `reject` applies to the final step, so a case can set up state and
+then assert that the statement it cares about is refused. For a step that is
+expected to fail *mid-case* — the audit-write case needs to continue after the
+violation so it can assert what `ROLLBACK` left behind — use the object form:
+
+```json
+{ "sql": "INSERT INTO audit (item_id, note) VALUES (1, NULL)",
+  "expects": "reject", "errorMatches": "null" }
+```
+
+`errorMatches` is a case-insensitive regex the error message must match. It is
+worth setting: a refusal for the *wrong reason* is not the assertion.
+
+### `check` — machine-readable assertions
+
+`assert` is prose for humans and carries cross-engine truth. `check` is what the
+runner executes:
+
+| key | asserts |
+|---|---|
+| `rows` | the last step returned this many rows |
+| `first` | the first row's named columns equal these values (`===`) |
+| `fields` | the **driver envelope** of the last step contains these keys — binding-scoped cases only |
+
+A column's *type* is asserted by selecting it explicitly — `typeof(x) AS ty` —
+rather than with a type-check primitive, so the SQL stays visible.
+
+**What `check` cannot reach:** it is evaluated on the engines the runner can
+reach. `verification/run-behaviour.mjs` is dependency-free, so it runs sqlite
+always and turso when the driver is installed; **postgres is skipped**. Postgres
+shape is documented in `assert` and verified by `verification/live/postgres.sql`.
+
+**And one limit worth knowing:** on an engine with `types.enforced: false`, the
+`types.map` is a *recommendation*, not a constraint — the engine accepts any type
+name and assigns affinity. So a wrong map entry there is **not detectable by
+execution**, because the engine does not care. Verified: changing
+`sqlite.types.map.boolean` to `"BOOLEAN"` leaves every case green, correctly.
+Only `enforced: true` engines can be checked this way.
 
 ### `steps` and substitution
 
-Steps are SQL. `{path}` tokens are replaced from the resolved object:
-`{clock.serverNow}`, `{types.timestamptz}`, `{types.map.jsonb}`,
-`{identifierQuote}`, `{serverInfo}`. `{ph}` is the **placeholder** for the current
-binding — the runner renders it from `bindings.<name>.params`, because the
-placeholder is a binding fact.
+`{path}` tokens are replaced from the resolved object:
+`{clock.serverNow}`, `{types.map.timestamptz}`, `{identifierQuote}`,
+`{serverInfo}`.
+
+`{ph}` is the **placeholder** for the current binding, rendered from
+`bindings.<name>.params` and **numbered in order**, so a dollar-style binding
+turns `LIMIT {ph} OFFSET {ph}` into `LIMIT $1 OFFSET $2`.
+
+`binds` applies to the **final** step — the one whose result is checked.
 
 ### The runner obligation
 
