@@ -54,6 +54,16 @@ Criterion 3 is the load-bearing one. A driver written from the tables is a
 carry is evidence that the **contract is incomplete** — and the fix belongs here
 first, not in the driver.
 
+It has a second edge, found by the first consumer to audit itself against it:
+**consumer defaults are facts too.** A kernel that emits every statement-shape
+fact from the tables — `bindings.pg.params`, `dml.returning`, `identifierQuote`,
+`txOwnership`, the result envelope via `bindings.<b>.result.affectedField` — and
+still hard-codes `database: "positronic"` or `user: "positronic_app"` has not met
+the criterion. Those are management facts, not binding facts: they belong in the
+consumer layer *above* the driver. "Fact-free" means free of every fact, not
+merely of engine facts, and stripping them is a prerequisite for the split rather
+than a follow-up to it.
+
 ## What a consumer does meanwhile
 
 Its driver stays in its own repo, under its own licence, depending on
