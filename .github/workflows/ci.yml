@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The security gate inspects commit author/committer identities across
           # the whole history. A shallow clone would silently skip them — which
@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 0
 
       - name: Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
