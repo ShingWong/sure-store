@@ -137,10 +137,10 @@
         "isolationLevels": ["read-committed", "repeatable-read", "serializable"],
         "forUpdate": true,
         "advisoryLock": true,
-        "txOwnership": ["driver-managed"],
+        "txOwnership": ["caller-issued", "driver-managed"],
         "traps": [
           "BEGIN IMMEDIATE is a SQLite construct; Postgres rejects it (syntax error).",
-          "A transaction is bound to the CONNECTION, not the pool. A transaction-local query issued on a pool handle runs autocommit while the rest of the tx runs inside it — measured as a missing FOR UPDATE lock, not as leaked SQL."
+          "caller-issued is a HAZARD here, not a prohibition. A transaction is bound to the CONNECTION, not the pool, so caller-issued requires binding ONE connection for the transaction's lifetime. A transaction-local query issued on a pool handle runs autocommit while the rest of the tx runs inside it — measured as a missing FOR UPDATE lock, not as leaked SQL. driver-managed avoids the hazard by construction. Both are declared because both work: measured, BEGIN; COMMIT; and SELECT … FOR UPDATE all succeed caller-issued on Postgres 16.15."
         ]
       },
       "dml": {

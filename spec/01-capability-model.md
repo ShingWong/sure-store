@@ -6,11 +6,11 @@ to a capability set. No renderer branches on a vendor string.
 
 ## Why capability-shaped
 
-Three engines are in scope and they differ along **six** independent axes
-(measured — see [02](02-engine-matrix.md)). A renderer that switches on the
-engine name would need editing for every new engine, and would carry vendor
-knowledge it should not have. A renderer that reads capabilities needs editing
-only when a genuinely *new kind of capability* appears.
+Three engines are in scope and they differ along the axes below (measured — see
+[02](02-engine-matrix.md)). A renderer that switches on the engine name would
+need editing for every new engine, and would carry vendor knowledge it should
+not have. A renderer that reads capabilities needs editing only when a genuinely
+*new kind of capability* appears.
 
 ## The dimensions
 
@@ -19,14 +19,34 @@ only when a genuinely *new kind of capability* appears.
 | `identity` | who assigns a primary key — the engine, or the caller? |
 | `schemaVersion` | where the schema version lives, and how it is read and written |
 | `columnProbe` | how to ask whether a table already has a column |
+| `tx.*` | how a transaction is opened, and **who owns it** |
+| `dml` | which post-write and post-conflict forms exist (`RETURNING`, `ON CONFLICT`) |
+| `indexKinds` | which indexer types the engine can materialise |
 | `fts.storage` | how the search index is materialised |
 | `fts.sync` | who keeps the index current — the core, or the engine |
 | `fts.match` | how a match expression is written |
 | `fts.semantics` | what the search *means* (tokenizer or text-search config) |
 | `fts.ranking` | how results are ordered, if at all |
 
-`fts.sync` is the one that changes the **shape** of what the core emits, not
-just the text: where the engine maintains its own index the core emits *fewer*
+Two of these change the **shape** of what the core emits, not merely the text:
+
+- **`fts.sync`** — where the engine maintains its own index, the core emits
+  *fewer* statements; the sync pair is deleted rather than translated.
+- **`tx.txOwnership`** — `driver-managed` means the core emits **no** transaction
+  statements at all, and the `tx` capabilities describe the driver's frame
+  instead of the core's. This is the axis carrying the behavioural weight, the
+  way `fts.sync` carries it for search.
+
+Everything else is a value substitution.
+
+### A trap is not a capability
+
+`traps[]` records how to get a declared capability *wrong*. The capability list
+records what is *possible*. Conflating them — refusing a capability because its
+misuse is hazardous — refuses working code, and it is the mistake this model has
+already made once: `caller-issued` on Postgres is hazardous without connection
+binding and **measured to work with it**, so it is declared with the hazard
+beside it rather than prohibited. See [02](02-engine-matrix.md) § Transactions. where the engine maintains its own index the core emits *fewer*
 statements, and the sync statements are deleted rather than translated.
 
 ## The store port

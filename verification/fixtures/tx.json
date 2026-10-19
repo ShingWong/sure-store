@@ -9,6 +9,7 @@
     "CREATE TABLE item (id INTEGER PRIMARY KEY, name TEXT NOT NULL)",
     "CREATE TABLE audit (id INTEGER PRIMARY KEY, item_id INTEGER, note TEXT NOT NULL)"
   ],
+  "identity": "Every step inserts ids EXPLICITLY, so this fixture is identity-agnostic and needs no `identity.autoAssigns`. Do not assume ids appear for free: `id INTEGER PRIMARY KEY` parses on Postgres and does NOT auto-assign (spec/02 Trap 2), so a porting language that omits ids will fail here for the wrong reason.",
   "cases": [
     {
       "id": "commit-both",

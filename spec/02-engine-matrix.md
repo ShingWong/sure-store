@@ -127,3 +127,12 @@ instead of appearing to work.
 
 `txOwnership` is the axis that carries the behavioural weight — see
 [04](04-open-questions.md) § 5.
+
+**Caller-issued on a server engine requires binding one connection.** Postgres
+measures `BEGIN; COMMIT;` and `SELECT … FOR UPDATE` as working caller-issued
+(16.15), so `caller-issued` is declared for it — but issuing on a *pool handle*
+induces the recorded trap: the transaction-local statement runs autocommit while
+the rest of the transaction runs inside it, which surfaces as a **missing lock**
+rather than as leaked SQL. The capability is real; the hazard sits beside it.
+Refusing the capability because its misuse is hazardous would refuse working
+code — see [01](01-capability-model.md) § *A trap is not a capability*.
