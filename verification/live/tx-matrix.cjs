@@ -3,6 +3,13 @@
 // probes and produce false failures (the first run had exactly that bug).
 const { DatabaseSync } = require("node:sqlite");
 const fs = require("fs");
+const path = require("node:path");
+
+// Scratch databases stay inside the repo and are gitignored. Resolved from this
+// file, never from an absolute path — an absolute path here would leak the
+// author's directory layout into a public repository.
+const SCRATCH = path.join(__dirname, "..", ".scratch");
+fs.mkdirSync(SCRATCH, { recursive: true });
 
 let n = 0;
 const mkSqlite = () => {
@@ -13,7 +20,7 @@ const mkSqlite = () => {
 };
 const mkTurso = () => {
   const { Database } = require("@tursodatabase/database/compat");
-  const p = `/usr/local/devel/sure-store/verification/.scratch/fr1-${n++}.db`;
+  const p = path.join(SCRATCH, `fr1-${n++}.db`);
   fs.rmSync(p, { force: true });
   const db = new Database(p, { experimental: ["index_method", "triggers"] });
   db.exec("CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT)");

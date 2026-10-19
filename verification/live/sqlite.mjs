@@ -33,8 +33,8 @@ assert.equal(ddl.length, 1, "sqlite materialises the index in one statement");
 // 2. rows, then the sync statements — sqlite is the engine where the CORE
 //    maintains the index, so these must exist and must work.
 db.exec(`INSERT INTO messages VALUES
-  (1,'INBOX',7,'Quarterly invoice','billing@vendor.com','Please find the invoice attached',1700000000),
-  (1,'INBOX',8,'Renewal notice','billing@vendor.com','Your subscription renews',1700000001)`);
+  (1,'INBOX',7,'Quarterly invoice','billing@example.com','Please find the invoice attached',1700000000),
+  (1,'INBOX',8,'Renewal notice','billing@example.com','Your subscription renews',1700000001)`);
 const sync = ftsSyncStatements(engine, {
   name: "messages_fts",
   table: "messages",

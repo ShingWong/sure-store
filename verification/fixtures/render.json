@@ -25,10 +25,10 @@
     },
     {
       "why": "terms the engine tokenises as one token must stay one term",
-      "terms": ["billing@vendor.com"],
-      "sqlite": "\"billing@vendor.com\"",
-      "turso": "\"billing@vendor.com\"",
-      "postgres": "billing@vendor.com"
+      "terms": ["billing@example.com"],
+      "sqlite": "\"billing@example.com\"",
+      "turso": "\"billing@example.com\"",
+      "postgres": "billing@example.com"
     }
   ],
   "ftsDdl": {

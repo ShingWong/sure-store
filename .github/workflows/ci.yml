@@ -1,0 +1,53 @@
+name: CI
+
+# Two gates, in the order that fails fast:
+#   1. the security gate — this repository is public, so a leak must never reach
+#      main, and a leak in history cannot be fixed by editing a file;
+#   2. contract verification — the dialect tables, the fixtures and the
+#      reference renderer must still agree.
+#
+# No `npm install`: the repo is dependency-free on purpose, so both gates run on
+# a fresh clone under plain node.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: security + verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          # The security gate inspects commit author/committer identities across
+          # the whole history. A shallow clone would silently skip them — which
+          # is exactly how a personal address reaches a public repo.
+          fetch-depth: 0
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Security gate — no keys, credentials, PII, IPs, env paths
+        run: npm run security:check
+
+      - name: Gate tests — prove the scanner fires, and allows look-alikes
+        run: npm test
+
+      - name: Contracts and fixtures are valid JSON
+        run: npm run check:contracts
+
+      - name: Contract verification — fixtures against the reference renderer
+        run: npm run verify

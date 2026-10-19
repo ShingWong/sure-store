@@ -12,7 +12,7 @@ function fresh() {
     subject, fromaddr, body_text, content='messages', content_rowid='rowid',
     tokenize='unicode61')`);
   db.exec(`INSERT INTO messages VALUES
-    (1,'INBOX',7,'Quarterly invoice','billing@vendor.com','Please find the invoice attached',1700000000)`);
+    (1,'INBOX',7,'Quarterly invoice','billing@example.com','Please find the invoice attached',1700000000)`);
   return db;
 }
 

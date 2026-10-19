@@ -15,7 +15,7 @@ about where the seams are.
 | case folding | ✅ | ✅ | ✅ |
 | stop-word removal | ❌ none | ❌ none | ❌ none (`simple` has no stop-list) |
 | stemming | ❌ none | ❌ none | ❌ none (`simple` does no stemming) |
-| tokenisation of `a@b.com` | splits | splits | splits |
+| tokenisation of `a@example.com` | splits | splits | splits |
 | **prefix search** | ✅ `term*` | ❌ **not supported** | ✅ `term:*` |
 
 Measured on Postgres:

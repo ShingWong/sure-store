@@ -19,8 +19,11 @@
     "./spec": "./spec/README.md"
   },
   "scripts": {
+    "security:check": "node scripts/security-check.mjs",
+    "check:contracts": "node -e \"const fs=require('fs');for(const f of ['contracts/engines.json','contracts/engines.schema.json','verification/fixtures/render.json','verification/fixtures/tx.json'])JSON.parse(fs.readFileSync(f,'utf8'));console.log('contracts + fixtures are valid JSON')\"",
     "verify": "node --experimental-strip-types verification/run-ts.mjs",
-    "test": "node --experimental-strip-types --test impl/ts/render.test.ts"
+    "test": "node --test test/*.test.mjs",
+    "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify"
   },
   "keywords": [
     "sqlite",

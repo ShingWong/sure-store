@@ -45,9 +45,20 @@ reproducible against a live engine, and the probe that proves it belongs in
   without a spec sentence — or the reverse — is an incomplete change.
 - Validate before calling anything done:
   ```bash
-  npm run verify    # shared fixtures against the reference renderer
-  npm test
+  npm run ci        # security gate + gate tests + JSON + verification, in order
   ```
+  or the pieces individually:
+  ```bash
+  npm run security:check   # no keys, credentials, PII, private IPs, env paths
+  npm test                 # proves the scanner fires, and allows look-alikes
+  npm run verify           # shared fixtures against the reference renderer
+  ```
+- **This repository is public, so the security gate is not optional.** Every
+  tracked file is published — unlike a repo with a private `plan/`, there is no
+  internal tier. And a personal email in *commit metadata* is published too and
+  cannot be fixed by editing a file, which is why the gate inspects history:
+  use an approved identity, and if a finding appears in history, rewrite it
+  before publishing rather than adding an allow-list entry.
 - Commit per stage. Imperative, scoped (`spec: …`, `contract: …`, `impl(ts): …`).
 
 ## Adding an engine

@@ -102,13 +102,25 @@ satisfies them, it agrees with every other implementation.
 ## Verification
 
 ```bash
-npm run verify    # run the shared fixtures against the TS reference impl
-npm test          # the reference impl's own tests
+npm run ci        # the whole gate: security + tests + JSON + verification
 ```
 
+or individually:
+
+```bash
+npm run security:check   # no keys, credentials, PII, private IPs, env paths
+npm test                 # proves the scanner fires and allows look-alikes
+npm run verify           # shared fixtures against the TS reference impl
+npm run check:contracts  # the tables and fixtures are valid JSON
+```
+
+CI runs exactly this set (`.github/workflows/ci.yml`), with a **full-history
+checkout** — the security gate inspects commit author and committer identities,
+and a shallow clone would silently skip them, which is precisely how a personal
+address reaches a public repo.
+
 The live probes under `verification/live/` re-run the measurements above against
-real engines (sqlite-wasm, Turso, Postgres) so the tables cannot drift from
-reality.
+real engines (sqlite, Turso, Postgres) so the tables cannot drift from reality.
 
 ## Status
 

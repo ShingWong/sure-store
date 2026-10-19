@@ -53,7 +53,7 @@ assert.equal(
   "turso maintains its own index — the core emits no sync statements",
 );
 db.exec(`INSERT INTO messages VALUES
-  (1,'INBOX',7,'Quarterly invoice','billing@vendor.com','Please find the invoice attached',1700000000)`);
+  (1,'INBOX',7,'Quarterly invoice','billing@example.com','Please find the invoice attached',1700000000)`);
 
 // 3. the rendered search finds it with no explicit sync
 const search = renderSearch(engine, {

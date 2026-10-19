@@ -42,8 +42,8 @@ ALTER TABLE messages ADD COLUMN search_vec tsvector
 CREATE INDEX messages_search_idx ON messages USING GIN (search_vec);
 
 INSERT INTO messages (account, folder, uid, subject, fromaddr, body_text, internaldate)
-VALUES (1,'INBOX',7,'Quarterly invoice','billing@vendor.com','Please find the invoice attached',1700000000),
-       (1,'INBOX',8,'Renewal notice','billing@vendor.com','Your subscription renews',1700000001);
+VALUES (1,'INBOX',7,'Quarterly invoice','billing@example.com','Please find the invoice attached',1700000000),
+       (1,'INBOX',8,'Renewal notice','billing@example.com','Your subscription renews',1700000001);
 
 -- 5. the search: no sync statements needed (the generated column maintains itself)
 SELECT 'search (tsquery &) ->' AS check, uid, subject
