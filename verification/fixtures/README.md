@@ -54,6 +54,16 @@ capability must run on exactly the engines that lack it. Requiring the capabilit
 instead makes the case SKIP there — it would pass by never executing, which is
 the most expensive kind of green. Three cases in the FR-2 set had this bug.
 
+**A path that does not resolve is a FAILURE, not a skip.** Paths are nested and
+axis-scoped: engine facts under `engines.<engine>.*` (`types.map.jsonb`,
+`clock.ddlDefaultNow`, `tx.forUpdate`), binding facts under `bindings.<driver>.*`
+(`params`, `result.affectedField`). Writing `types.timestamptz` for
+`types.map.timestamptz`, or reading `result.affectedField` off an engine, fails
+the case with the offending path named. It must not skip: a skip is
+indistinguishable from "the engine genuinely lacks this capability", which is
+exactly how a typo becomes a green run. `npm run verify:resolver` proves the
+resolver still fires.
+
 ### `expects` and `errorMatches`
 
 | value | meaning |
@@ -104,7 +114,8 @@ Only `enforced: true` engines can be checked this way.
 
 `{path}` tokens are replaced from the resolved object:
 `{clock.serverNow}`, `{types.map.timestamptz}`, `{identifierQuote}`,
-`{serverInfo}`.
+`{serverInfo}`. A token whose path does not resolve **fails the case**; it never
+survives into the SQL as literal text.
 
 `{ph}` is the **placeholder** for the current binding, rendered from
 `bindings.<name>.params` and **numbered in order**, so a dollar-style binding

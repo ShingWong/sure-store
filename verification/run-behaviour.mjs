@@ -112,10 +112,34 @@ function resolvePath(obj, dotted) {
   return dotted.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
 }
 
+/**
+ * Resolve a contract path, or fail loudly.
+ *
+ * `undefined` must never be read as a fact. A path that does not resolve is a
+ * FIXTURE or CONTRACT defect, and reading it as "absent" makes the case skip —
+ * indistinguishable from an engine that genuinely lacks the capability. That is
+ * the "passed by never running" class, and fail-closed has to govern the
+ * resolver, not only the engine.
+ *
+ * Measured before this landed: `{types.timestamptz}` (flat; the real path is
+ * `types.map.timestamptz`) survived into the SQL as literal text, and a typo in
+ * `requires.path` silently skipped.
+ */
+function resolveStrict(scope, path, where) {
+  const value = resolvePath(scope, path);
+  if (value === undefined) {
+    throw new Error(
+      `unresolved contract path "${path}" (${where}) — no such fact. ` +
+        `Paths are nested: types.map.jsonb, bindings.<driver>.result.affectedField.`,
+    );
+  }
+  return value;
+}
+
 /** Does a case run against this entry? See fixtures/README.md. */
 function satisfies(requires, scope) {
   if (!requires) return { run: true, why: "no requirement" };
-  const value = resolvePath(scope, requires.path);
+  const value = resolveStrict(scope, requires.path, "requires");
   if ("equals" in requires) {
     return { run: value === requires.equals, why: `${requires.path} === ${JSON.stringify(requires.equals)}` };
   }
@@ -130,17 +154,76 @@ function satisfies(requires, scope) {
  * Replace {path} tokens from the scope, and {ph} with the placeholder for this
  * binding. {ph} occurrences are numbered in order, so a dollar-style binding
  * renders `LIMIT $1 OFFSET $2`.
+ *
+ * An unresolved token is a FAILURE, not literal text — see resolveStrict.
  */
 function substitute(text, scope, paramsStyle) {
   let ph = 0;
-  return String(text).replace(/\{([\w.]+)\}/g, (whole, path) => {
+  return String(text).replace(/\{([\w.]+)\}/g, (_whole, path) => {
     if (path === "ph") {
       ph += 1;
       return paramsStyle === "positional-dollar" ? `$${ph}` : "?";
     }
-    const value = resolvePath(scope, path);
-    return value === undefined ? whole : String(value);
+    const value = resolveStrict(scope, path, `{${path}} in SQL`);
+    return String(value);
   });
+}
+
+// ---------------------------------------------------------------------------
+// Resolver self-check — prove the fail-closed behaviour actually fires.
+//
+// A check that only ever passes is worthless, and this one guards the exact
+// seam that let a typo become a skip: the resolver. Run by `npm run ci`.
+// ---------------------------------------------------------------------------
+if (process.argv.includes("--self-check")) {
+  const sqliteEngine = contract.engines.sqlite;
+  const pgBinding = { ...contract.engines.postgres, ...contract.bindings.pg };
+  let defects = 0;
+
+  const mustThrow = (name, fn) => {
+    try {
+      fn();
+      console.log(`  NOT THROWING — ${name}`);
+      defects += 1;
+    } catch {
+      console.log(`  fires — ${name}`);
+    }
+  };
+  const mustResolve = (name, fn) => {
+    try {
+      fn();
+      console.log(`  resolves — ${name}`);
+    } catch (err) {
+      console.log(`  WRONGLY THREW — ${name}: ${err.message}`);
+      defects += 1;
+    }
+  };
+
+  // The failures: a flat path where the contract nests (the exact slip made in a
+  // real contribution), and a path scoped to the wrong axis.
+  mustThrow("requires: nested path written flat", () =>
+    satisfies({ path: "types.timestamptz" }, sqliteEngine),
+  );
+  mustThrow("requires: binding fact read off the engine", () =>
+    satisfies({ path: "result.affectedField" }, sqliteEngine),
+  );
+  mustThrow("substitute: nested token written flat", () =>
+    substitute("SELECT {types.timestamptz}", sqliteEngine, null),
+  );
+
+  // The controls: real paths must still resolve, or the check is a brick wall.
+  mustResolve("requires: the nested form of the path that just failed", () =>
+    satisfies({ path: "types.map.timestamptz" }, sqliteEngine),
+  );
+  mustResolve("substitute: real nested engine fact", () =>
+    substitute("SELECT {types.map.timestamptz}", sqliteEngine, null),
+  );
+  mustResolve("requires: binding fact under its binding", () =>
+    satisfies({ path: "result.affectedField" }, pgBinding),
+  );
+
+  console.log(defects === 0 ? "resolver self-check: OK" : "resolver self-check: FAILED");
+  process.exit(defects === 0 ? 0 : 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +306,20 @@ const skips = [];
 
 /** Run one case once, on a fresh connection. */
 function attempt(file, caseDef, scope, adapter, paramsStyle, label) {
-  const gate = satisfies(caseDef.requires, scope);
+  let gate;
+  try {
+    gate = satisfies(caseDef.requires, scope);
+  } catch (err) {
+    // An unresolvable requires.path is a fixture defect, not an engine property.
+    // It must be a FAILURE: a skip here is indistinguishable from a genuine
+    // capability gap, which is how a typo becomes a green run.
+    counts.fail += 1;
+    failures.push(
+      `${file} ${caseDef.id} [${label}] — ${String(err && err.message).split("\n")[0]}`,
+    );
+    if (VERBOSE) console.log(`  FAIL ${caseDef.id} [${label}]`);
+    return;
+  }
   if (!gate.run) {
     counts.skip += 1;
     skips.push(`${file} ${caseDef.id} [${label}] — not declared (${gate.why})`);

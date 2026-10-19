@@ -25,7 +25,8 @@
     "verify:render": "node --experimental-strip-types verification/run-ts.mjs",
     "verify:behaviour": "node verification/run-behaviour.mjs",
     "test": "node --test test/*.test.mjs",
-    "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify"
+    "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify && npm run verify:resolver",
+    "verify:resolver": "node verification/run-behaviour.mjs --self-check"
   },
   "keywords": [
     "sqlite",
