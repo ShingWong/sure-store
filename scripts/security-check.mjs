@@ -1,9 +1,11 @@
 /**
  * Repository security gate — sure-store.
  *
- * This repository is MIT and intended to be public, so **every tracked file is
- * published**. Unlike a repo with a private `plan/` directory, there is no
- * internal tier: a leak in a spec note is as public as a leak in code. That
+ * This repository is MIT and destined to be public (it is private only until the
+ * contract is stable), so **every tracked file is treated as published**. Unlike
+ * a repo with a private `plan/` directory, there is no internal tier: a leak in a
+ * spec note is as public as a leak in code, and a value deleted later is still in
+ * history. That
  * makes the rules simpler and stricter than the sure-mail gate this is modelled
  * on.
  *
@@ -289,7 +291,7 @@ function main() {
       console.error(`  ${where} — ${f.label} — ${f.hint}`)
     }
     console.error(
-      '\nThis repository is public. Remove the value, or — for a deliberate\n' +
+      '\nThis repository becomes public once stable. Remove the value, or — for a deliberate\n' +
         'placeholder — add an ALLOW entry in scripts/security-check.mjs with\n' +
         'file + label + match + reason. A commit-identity finding means the\n' +
         'address is in the history: rewrite it before publishing.\n',

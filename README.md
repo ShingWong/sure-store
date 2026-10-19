@@ -124,12 +124,35 @@ real engines (sqlite, Turso, Postgres) so the tables cannot drift from reality.
 
 ## Status
 
-**0.1.0 — the contract is measured; one reference implementation exists.**
+**0.1.0 — the contract is measured; one reference implementation exists.
+Private until it is stable.**
+
+The repository is **private on purpose, not as a default**: the tables are still
+moving (0.1.0, unreleased), and a public contract that changes weekly teaches
+consumers to pin a snapshot and stop reading it. It becomes public when the
+stability bar below is met — at which point the security gate has already been
+running since the first commit, because history is permanent and cannot be
+retroactively cleaned.
+
+**Stability bar** (proposed; the last item is the one that actually protects
+consumers):
+
+- [ ] the open questions in `spec/04` are resolved or deferred with a stated reason
+- [ ] the behavioural suites run green against **all three** engines — no engine
+      permanently skipped for want of a driver or a server in CI
+- [ ] the fixture format is final (it is the contract, so changing it later
+      breaks every implementation at once)
+- [ ] at least one consumer depends on the published package and its own gates
+      pass against it — a contract nobody consumes is a hypothesis
 
 - ✅ the capability model and the measured engine matrix (`spec/`)
 - ✅ `contracts/engines.json` + JSON Schema
 - ✅ a TypeScript reference renderer + fixtures that pin it
 - ✅ the live probes that produced the measurements
+- ✅ a compiled package entry (`dist/`, plain-node consumable)
+- ⬜ parameter-style rendering driven by `bindings.<b>.params` (compose-time, not
+  a textual rewrite — `?` is also the jsonb existence operator)
+- ⬜ full introspection (tables / columns / PK / FK) and a canonical type axis
 - ⬜ the Python and AssemblyScript renderers (the fixtures define their job)
 - ⬜ the shared schema DSL (sure-factor's `SchemaInfo` is the candidate) — see
   `spec/04-open-questions.md`

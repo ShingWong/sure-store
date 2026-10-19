@@ -1,8 +1,9 @@
 name: CI
 
 # Two gates, in the order that fails fast:
-#   1. the security gate — this repository is public, so a leak must never reach
-#      main, and a leak in history cannot be fixed by editing a file;
+#   1. the security gate — this repository becomes public once the contract is
+#      stable, so a leak must never reach main: history is permanent, and an
+#      entry removed today is still recoverable tomorrow;
 #   2. contract verification — the dialect tables, the fixtures and the
 #      reference renderer must still agree.
 #

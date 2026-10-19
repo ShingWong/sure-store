@@ -53,12 +53,16 @@ reproducible against a live engine, and the probe that proves it belongs in
   npm test                 # proves the scanner fires, and allows look-alikes
   npm run verify           # shared fixtures against the reference renderer
   ```
-- **This repository is public, so the security gate is not optional.** Every
-  tracked file is published — unlike a repo with a private `plan/`, there is no
-  internal tier. And a personal email in *commit metadata* is published too and
-  cannot be fixed by editing a file, which is why the gate inspects history:
-  use an approved identity, and if a finding appears in history, rewrite it
-  before publishing rather than adding an allow-list entry.
+- **This repository is destined to be public, so the security gate is not
+  optional even while it is private.** It stays private until the contract is
+  stable (README § Status), but visibility is not a licence: the gate runs from
+  the first commit because history is permanent, and an entry removed today is
+  still in the object store tomorrow. Every tracked file is treated as published
+  — unlike a repo with a private `plan/`, there is no internal tier. A personal
+  email in *commit metadata* likewise cannot be fixed by editing a file, which
+  is why the gate inspects history: use an approved identity, and if a finding
+  appears in history, rewrite it before publishing rather than adding an
+  allow-list entry.
 - Commit per stage. Imperative, scoped (`spec: …`, `contract: …`, `impl(ts): …`).
 
 ## Adding an engine
