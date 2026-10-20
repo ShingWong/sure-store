@@ -86,6 +86,35 @@ That is the L3 boundary, and it already exists. This repository supplies the
 **declaration** half — the equivalent of ODBC's `SQLGetInfo` — so the core can
 render the right SQL and refuse when it cannot.
 
+## Placeholders
+
+A binding's parameter style is a measured fact (`bindings.<b>.params`). The Nth
+bound parameter is **composed** from that style while the statement is built:
+
+| style | 1st | 2nd | 3rd |
+|---|---|---|---|
+| `positional-q` | `?` | `?` | `?` |
+| `positional-dollar` | `$1` | `$2` | `$3` |
+| `mixed` | `?` | `?` | `?` |
+| `named` | refuses | | |
+
+Two rules, and the second is the one that bites:
+
+1. **Compose, never rewrite.** A `?` → `$n` pass over finished SQL is unsound:
+   `?` is also the jsonb *existence operator*, and it appears inside string
+   literals. `detail ? 'key'` becomes `detail $1 'key` — valid SQL, and wrong.
+   The distinction is syntactic, not lexical, so no regex recovers it.
+2. **`mixed` renders `?`.** The binding accepts both styles (measured), so
+   numbering buys nothing and only adds a way to be wrong.
+
+`named` **refuses.** It is declared in the schema, but no binding uses it, and a
+positional index cannot name a parameter: `:p1` would be a fact the tables do not
+carry. Fail closed rather than invent a convention.
+
+A renderer substituting a template that came from the tables must **assert the
+placeholder count** (one per fact) rather than assume it: `?` is valid SQL on its
+own, so an extra one is silently mis-bound instead of failing.
+
 ## Fail-closed
 
 1. An engine absent from the tables → **error**.

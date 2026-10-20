@@ -153,6 +153,53 @@ export function renderFtsTriggers(
   return engine.fts.triggers.map((t) => substitute(t, vars));
 }
 
+/**
+ * How the Nth bound parameter is spelled for a binding style.
+ *
+ * Compose this WHILE building the statement — never rewrite `?` afterwards. `?`
+ * is also the jsonb existence operator and it appears inside string literals, so
+ * a textual conversion turns `detail ? 'key'` into `detail $1 'key'`. That
+ * distinction is syntactic, not lexical, and no regex recovers it.
+ *
+ * `mixed` renders `?`: the binding accepts both styles and numbering buys
+ * nothing. `named` refuses — no binding uses it, and a positional index cannot
+ * name a parameter, so `:p1` would be a fact the tables do not carry.
+ */
+export function renderPlaceholder(style: string, index: number): string {
+  if (!Number.isInteger(index) || index < 1) {
+    throw new Error(`placeholder index must be a positive integer, got ${index}`);
+  }
+  switch (style) {
+    case "positional-q":
+      return "?";
+    case "mixed":
+      return "?";
+    case "positional-dollar":
+      return `$${index}`;
+    case "named":
+      throw new Error(
+        "named placeholders are declared but no binding uses them: a positional index cannot name a parameter, and inventing one would be a fact the tables do not carry",
+      );
+    default:
+      throw new Error(`unknown parameter style "${style}" — not in the tables`);
+  }
+}
+
+/**
+ * Replace the single placeholder of a contract-owned template.
+ *
+ * The count is asserted, not assumed: `?` is valid SQL of its own (the jsonb
+ * existence operator), so a template carrying more than the expected one would
+ * be silently mis-bound instead of failing.
+ */
+function bindOne(template: string, what: string, placeholder: string): string {
+  const count = (template.match(/\?/g) ?? []).length;
+  if (count !== 1) {
+    throw new Error(`${what} must contain exactly one placeholder, found ${count}: ${template}`);
+  }
+  return template.replace("?", placeholder);
+}
+
 export interface SearchOptions {
   table: string;
   name: string;
@@ -162,6 +209,8 @@ export interface SearchOptions {
   terms: string[];
   limit: number;
   config?: string;
+  /** The binding's parameter style. When set, placeholders are composed for it. */
+  params?: string;
 }
 
 /** The search statement plus the parameters it binds, in order. */
@@ -175,9 +224,11 @@ export function renderSearch(
     cols: opts.cols.join(", "),
     config: opts.config ?? engine.fts.defaultConfig ?? "",
   };
+  const ph = (n: number): string => (opts.params ? renderPlaceholder(opts.params, n) : "?");
+  const predicate = bindOne(substitute(engine.fts.match.predicate, vars), "the match predicate", ph(1));
   const sql =
     `SELECT ${opts.select} FROM ${substitute(engine.fts.match.searchFrom, vars)} ` +
-    `WHERE ${substitute(engine.fts.match.predicate, vars)} ` +
-    `ORDER BY ${opts.orderBy} DESC LIMIT ?`;
+    `WHERE ${predicate} ` +
+    `ORDER BY ${opts.orderBy} DESC LIMIT ${ph(2)}`;
   return { sql, params: [renderMatchParam(engine, opts.terms), opts.limit] };
 }

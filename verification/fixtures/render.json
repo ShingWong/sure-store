@@ -93,4 +93,38 @@
     "why": "an engine the tables do not describe must throw, never fall back to a default dialect",
     "unknownEngine": "mysql"
   }
+  ,
+  "placeholder": {
+    "why": "the Nth placeholder is COMPOSED from bindings.<b>.params while the statement is built. Never a rewrite of arbitrary SQL: ? is also the jsonb existence operator and it appears inside string literals, so a textual conversion turns detail ? 'key' into detail $1 'key'. Measured: the postgres predicate needs $1 for MATCH and $2 for LIMIT in that order.",
+    "styles": [
+      { "style": "positional-q", "index": 1, "expects": "?" },
+      { "style": "positional-q", "index": 3, "expects": "?" },
+      { "style": "positional-dollar", "index": 1, "expects": "$1" },
+      { "style": "positional-dollar", "index": 3, "expects": "$3" },
+      { "style": "mixed", "index": 1, "expects": "?" },
+      { "style": "mixed", "index": 2, "expects": "?" }
+    ],
+    "refuses": [
+      {
+        "style": "named",
+        "why": "declared in the schema but no binding uses it: a positional index cannot name a parameter, so any spelling would be a fact the tables do not carry"
+      },
+      {
+        "style": "unknown-style",
+        "why": "not in the tables — fail closed rather than guess"
+      }
+    ],
+    "search": {
+      "input": {
+        "table": "messages",
+        "name": "messages_fts",
+        "cols": ["subject", "fromaddr", "body_text"],
+        "select": "m.uid",
+        "orderBy": "m.internaldate",
+        "terms": ["invoice"],
+        "limit": 50
+      },
+      "pg": "SELECT m.uid FROM messages m WHERE messages_fts @@ plainto_tsquery('simple', $1) ORDER BY m.internaldate DESC LIMIT $2"
+    }
+  }
 }

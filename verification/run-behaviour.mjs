@@ -16,6 +16,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 
+import { renderPlaceholder } from "../impl/ts/index.ts";
+
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, "..");
 const VERBOSE = process.argv.includes("--verbose");
@@ -162,7 +164,9 @@ function substitute(text, scope, paramsStyle) {
   return String(text).replace(/\{([\w.]+)\}/g, (_whole, path) => {
     if (path === "ph") {
       ph += 1;
-      return paramsStyle === "positional-dollar" ? `$${ph}` : "?";
+      // One rule, from the renderer: composing here rather than special-casing
+      // keeps `named` a refusal instead of a silent `?`.
+      return renderPlaceholder(paramsStyle ?? "positional-q", ph);
     }
     const value = resolveStrict(scope, path, `{${path}} in SQL`);
     return String(value);

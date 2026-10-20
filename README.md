@@ -150,7 +150,7 @@ consumers):
 - ✅ a TypeScript reference renderer + fixtures that pin it
 - ✅ the live probes that produced the measurements
 - ✅ a compiled package entry (`dist/`, plain-node consumable)
-- ⬜ parameter-style rendering driven by `bindings.<b>.params` (compose-time, not
+- ✅ parameter-style rendering driven by `bindings.<b>.params` (compose-time, not
   a textual rewrite — `?` is also the jsonb existence operator)
 - ⬜ full introspection (tables / columns / PK / FK) and a canonical type axis
 - ⬜ the Python and AssemblyScript renderers (the fixtures define their job)

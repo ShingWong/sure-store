@@ -16,6 +16,7 @@ import {
   renderFtsDdl,
   renderFtsTriggers,
   renderMatchParam,
+  renderPlaceholder,
   renderSearch,
 } from "../impl/ts/index.ts";
 import { loadContracts, specVersion } from "../impl/ts/index.ts";
@@ -94,6 +95,48 @@ for (const name of ENGINES) {
   const rendered = renderSearch(getEngine(engines, name), fixtures.search.input);
   check(`${name} search sql (${fixtures.search.why})`, rendered.sql, fixtures.search[name].sql);
   check(`${name} search params`, rendered.params, fixtures.search[name].params);
+}
+
+console.log("placeholder");
+for (const c of fixtures.placeholder.styles) {
+  check(
+    `${c.style} placeholder #${c.index} (${fixtures.placeholder.why})`,
+    renderPlaceholder(c.style, c.index),
+    c.expects,
+  );
+}
+for (const c of fixtures.placeholder.refuses) {
+  let threw = false;
+  try {
+    renderPlaceholder(c.style, 1);
+  } catch {
+    threw = true;
+  }
+  check(
+    `placeholder '${c.style}' refuses (${c.why})`,
+    threw,
+    true,
+  );
+}
+{
+  // Compose-time, end to end: the same search statement, spelled for a binding
+  // that only accepts $n. Two placeholders, numbered in the order they bind.
+  const pg = renderSearch(getEngine(engines, "postgres"), {
+    ...fixtures.placeholder.search.input,
+    params: "positional-dollar",
+  });
+  check(
+    "postgres search composed for positional-dollar",
+    pg.sql,
+    fixtures.placeholder.search.pg,
+  );
+  // The literal `?` in a jsonb-shaped statement must survive: nothing rewrites
+  // it, because nothing in this design rewrites SQL after the fact.
+  check(
+    "a literal ? is not a placeholder",
+    renderPlaceholder("positional-dollar", 2),
+    "$2",
+  );
 }
 
 console.log("fail closed");
