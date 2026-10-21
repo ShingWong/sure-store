@@ -4,6 +4,49 @@
   "note": "Every value here was measured against a live engine. See spec/02-engine-matrix.md for the probe that produced each one, and verification/live/ for the probes themselves. Do not edit from memory — re-run the probe.",
   "engines": {
     "sqlite": {
+    "introspection": {
+      "note": "Measured 2026-10-21 on SQLite 3.51.3; see spec/02 section Introspection.",
+      "scope": "per-table",
+      "tables": {
+        "sql": "SELECT name AS table_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+        "fields": { "name": "table_name" }
+      },
+      "columns": {
+        "sql": "PRAGMA table_info({table})",
+        "tableRef": "inline-quoted",
+        "fields": {
+          "name": "name",
+          "ordinal": "cid",
+          "typeName": "type",
+          "typeInternal": null,
+          "maxLength": null,
+          "defaultText": "dflt_value"
+        },
+        "nullability": { "field": "notnull", "nullableValue": 0 },
+        "primaryKeyPosition": "pk"
+      },
+      "primaryKeys": { "source": "columns" },
+      "foreignKeys": {
+        "sql": "PRAGMA foreign_key_list({table})",
+        "tableRef": "inline-quoted",
+        "constraintKey": "id",
+        "fields": {
+          "constraint": "id",
+          "ordinal": "seq",
+          "column": "from",
+          "refTable": "table",
+          "refColumn": "to",
+          "onDelete": "on_delete",
+          "onUpdate": "on_update"
+        }
+      },
+      "traps": [
+        "PRAGMA takes no bound argument: PRAGMA table_info(?) is a syntax error. The table name MUST be inlined and quoted with identifierQuote.",
+        "table_info reports notnull=0 for an INTEGER PRIMARY KEY column, which cannot be null. Normalize nullable = rawNullable AND NOT isPrimaryKey.",
+        "The declared type is one string with the length embedded (VARCHAR(40)); there is no separate maxLength fact, so maxLength is null here.",
+        "defaultText is SQL text ('x', CURRENT_TIMESTAMP), not a value."
+      ]
+    },
       "kind": "embedded",
       "fileFormat": "sqlite3",
       "conformance": "search",
@@ -160,6 +203,52 @@
       }
     },
     "postgres": {
+    "introspection": {
+      "note": "Measured 2026-10-21 on PostgreSQL 16.15; see spec/02 section Introspection.",
+      "scope": "set-based",
+      "params": ["schema"],
+      "tables": {
+        "sql": "SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = ? ORDER BY table_name",
+        "fields": { "schema": "table_schema", "name": "table_name" }
+      },
+      "columns": {
+        "sql": "SELECT table_name, ordinal_position, column_name, data_type, udt_name, character_maximum_length, is_nullable, column_default FROM information_schema.columns WHERE table_schema = ? ORDER BY table_name, ordinal_position",
+        "fields": {
+          "table": "table_name",
+          "name": "column_name",
+          "ordinal": "ordinal_position",
+          "typeName": "data_type",
+          "typeInternal": "udt_name",
+          "maxLength": "character_maximum_length",
+          "defaultText": "column_default"
+        },
+        "nullability": { "field": "is_nullable", "nullableValue": "YES" },
+        "primaryKeyPosition": null
+      },
+      "primaryKeys": {
+        "sql": "SELECT tc.table_name, kcu.column_name, kcu.ordinal_position FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = ? ORDER BY tc.table_name, kcu.ordinal_position",
+        "fields": { "table": "table_name", "column": "column_name", "ordinal": "ordinal_position" }
+      },
+      "foreignKeys": {
+        "sql": "SELECT tc.table_name, tc.constraint_name, kcu.column_name, kcu.ordinal_position, ref.table_name AS foreign_table, ref.column_name AS foreign_column, rc.delete_rule, rc.update_rule FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema JOIN information_schema.referential_constraints rc ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.table_schema JOIN information_schema.key_column_usage ref ON ref.constraint_name = rc.unique_constraint_name AND ref.constraint_schema = rc.unique_constraint_schema AND ref.ordinal_position = kcu.position_in_unique_constraint WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = ? ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position",
+        "constraintKey": "constraint_name",
+        "fields": {
+          "constraint": "constraint_name",
+          "ordinal": "ordinal_position",
+          "column": "column_name",
+          "refTable": "foreign_table",
+          "refColumn": "foreign_column",
+          "onDelete": "delete_rule",
+          "onUpdate": "update_rule"
+        }
+      },
+      "traps": [
+        "Do NOT join constraint_column_usage by name: it matches every column of the referenced constraint against every key column, so a 2-column composite FK returns 4 rows including x->y and y->x. Measured.",
+        "Join the referenced side through referential_constraints.unique_constraint_name AND key_column_usage.position_in_unique_constraint. Joining it on the FK's own constraint name only looks right when both tables give their columns the same names.",
+        "data_type is normalised (character varying) while udt_name is the internal name (varchar); both are carried so a canonical type axis can decide later.",
+        "column_default is engine text and includes casts: 'x'::character varying, now(). Not portable."
+      ]
+    },
       "kind": "server",
       "fileFormat": null,
       "conformance": "search",

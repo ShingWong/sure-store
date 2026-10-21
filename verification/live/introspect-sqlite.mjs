@@ -27,6 +27,13 @@ CREATE TABLE child (
   label VARCHAR(40) DEFAULT 'x',
   note TEXT
 );
+-- A COMPOSITE foreign key: the shape that a name-only join multiplies.
+CREATE TABLE pair (x INTEGER NOT NULL, y INTEGER NOT NULL, PRIMARY KEY (x, y));
+CREATE TABLE link (
+  id INTEGER PRIMARY KEY,
+  x INTEGER, y INTEGER,
+  FOREIGN KEY (x, y) REFERENCES pair (x, y) ON DELETE CASCADE
+);
 `);
 
 const tables = db

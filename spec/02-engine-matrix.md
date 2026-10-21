@@ -188,3 +188,111 @@ Three findings worth more than the table:
 because an undeclared axis that happens to be portable is exactly the situation
 [01](01-capability-model.md) forbids — and because SQLite *also* accepts backtick
 and `[bracket]`, which a renderer must not use or it stops being portable.
+
+## Introspection — measured on sqlite and Postgres (task 2)
+
+Raw output: `verification/live/introspect-sqlite.mjs` and
+`verification/live/introspect-postgres.sh`. The statements themselves live in
+`contracts/engines.json` under `engines.<engine>.introspection`, so this section
+records **what the output means**, not a second copy of the SQL.
+
+### What it carries
+
+Four facts, which are the four a schema-driven consumer needs:
+
+| fact | shape |
+|---|---|
+| tables | `{ name, schema? }` |
+| columns | `{ table, name, ordinal, typeName, typeInternal, maxLength, nullable, defaultText }` |
+| primary key | `{ table, columns[] }` — ordered |
+| foreign key | `{ table, columns[], refTable, refColumns[], onDelete, onUpdate }` — ordered on both sides |
+
+Deliberately **not** carried: unique constraints, plain indexes, check
+constraints, comments, collation. They are measurable, but nothing consumes them
+yet, and an unused fact surface is a maintenance cost with no evidenced value.
+
+### The two shapes
+
+- **sqlite — per-table.** One statement per table, because `PRAGMA` cannot take
+  an argument at all (Trap A). `scope: "per-table"`, `tableRef: "inline-quoted"`.
+- **Postgres — set-based.** One statement returns every table's rows; the schema
+  is a bound parameter. `scope: "set-based"`.
+
+`tableRef: "inline-quoted"` is a **safety obligation, not formatting**: the table
+name must be quoted through `identifierQuote`. It cannot be bound, so a renderer
+that concatenates a caller-supplied name has an injection surface with no
+parameterisation to hide behind.
+
+### Trap A — `PRAGMA` does not accept a bound table name
+
+Measured on SQLite 3.51.3:
+
+```
+PRAGMA table_info(?)        -> throws: near "?": syntax error
+PRAGMA table_info("parent") -> [{cid:0,name:"id",type:"INTEGER",...}]
+```
+
+There is no parameterised form. This is why introspection is per-table on sqlite
+and set-based on Postgres: the engines differ in *whether the query can be
+general*, not merely in how the rows are shaped.
+
+### Trap B — a primary key column is not nullable, and sqlite does not say so
+
+The same column, the same DDL, measured on both engines:
+
+```
+sqlite    parent.id  {"type":"INTEGER","notnull":0,"pk":1}
+postgres  parent.id  {"data_type":"integer","is_nullable":"NO"}
+```
+
+`notnull: 0` means *the pragma did not record NOT NULL*; the column is a PK and
+cannot be null. Mapping `notnull` straight to `nullable` makes the two engines
+disagree about a column with identical semantics — and a consumer would emit
+different DDL from the same intent.
+
+**Rule:** `nullable = rawNullable AND NOT isPrimaryKey`, for every engine. It is
+idempotent on Postgres, where a PK already reports `NO`.
+
+### Trap C — a name-joined foreign key query invents column pairs
+
+Three query shapes were measured against a **2-column composite** FK
+(`link(x,y) -> pair(x,y)`); two look plausible and are wrong:
+
+| shape | rows | result |
+|---|---|---|
+| `constraint_column_usage` joined by constraint name | **4** | `x→x, x→y, y→x, y→y` — pairs that do not exist |
+| referenced side joined on the FK's own constraint name | 2 | correct only when both tables name their columns identically — it was correct for `(x,y)` and wrong for `parent_id → id` |
+| `referential_constraints.unique_constraint_name` + `position_in_unique_constraint` | **3** | `parent_id→id`, `x→x`, `y→y` — correct |
+
+The second shape is the dangerous one: it passes on the case you happen to test.
+The third is what the contract carries.
+
+**Rule:** group by `constraintKey` (`id` on sqlite, `constraint_name` on
+Postgres), order by `ordinal`, and never derive the referenced column from a
+name-based join. A table may have **many** foreign keys, and each may have many
+columns — a shape that supports one FK per table cannot represent either.
+
+### Trap D — type and default do not share a representation
+
+```
+sqlite    label  {"type":"VARCHAR(40)","dflt_value":"'x'"}
+postgres  label  {"data_type":"character varying","udt_name":"varchar",
+                  "character_maximum_length":40,
+                  "column_default":"'x'::character varying"}
+```
+
+`typeName` is the engine's own vocabulary (`VARCHAR(40)` is one string with the
+length embedded; Postgres splits normalised name, internal name and an integer).
+`defaultText` is SQL **text**, cast-qualified on Postgres, and not comparable
+across engines.
+
+**Rules:** carry `typeName`, `typeInternal` and `maxLength` raw and let the
+canonical type axis (task 3) do the mapping — a generic type invented here would
+be a guess. Carry `defaultText` as engine text and mark it non-portable; do not
+normalise casts.
+
+### Turso is absent on purpose
+
+It is the sqlite family and no consumer needs introspection there yet, so the
+tables do not declare it. A renderer asked for turso introspection must **refuse**
+— an undeclared fact surface is not the same as an empty one.

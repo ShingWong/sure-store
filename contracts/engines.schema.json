@@ -25,6 +25,55 @@
     }
   },
   "definitions": {
+    "introspection": {
+      "type": "object",
+      "required": ["scope", "tables", "columns"],
+      "additionalProperties": true,
+      "properties": {
+        "note": { "type": "string" },
+        "scope": { "enum": ["per-table", "set-based"] },
+        "params": { "type": "array", "items": { "type": "string" } },
+        "tables": { "$ref": "#/definitions/introspectionQuery" },
+        "columns": { "$ref": "#/definitions/introspectionQuery" },
+        "primaryKeys": {
+          "oneOf": [
+            { "$ref": "#/definitions/introspectionQuery" },
+            {
+              "type": "object",
+              "required": ["source"],
+              "additionalProperties": false,
+              "properties": { "source": { "enum": ["columns"] } }
+            }
+          ]
+        },
+        "foreignKeys": { "$ref": "#/definitions/introspectionQuery" },
+        "traps": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "introspectionQuery": {
+      "type": "object",
+      "required": ["sql", "fields"],
+      "additionalProperties": true,
+      "properties": {
+        "sql": { "type": "string" },
+        "tableRef": { "enum": ["inline-quoted", "bound"] },
+        "constraintKey": { "type": "string" },
+        "fields": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "null"] }
+        },
+        "nullability": {
+          "type": "object",
+          "required": ["field", "nullableValue"],
+          "additionalProperties": false,
+          "properties": {
+            "field": { "type": "string" },
+            "nullableValue": {}
+          }
+        },
+        "primaryKeyPosition": { "type": ["string", "null"] }
+      }
+    },
     "binding": {
       "type": "object",
       "required": ["engine", "params", "result"],
@@ -49,6 +98,7 @@
       "required": ["kind", "conformance", "identity", "schemaVersion", "columnProbe", "fts"],
       "additionalProperties": true,
       "properties": {
+        "introspection": { "$ref": "#/definitions/introspection" },
         "kind": { "enum": ["embedded", "server"] },
         "fileFormat": { "type": ["string", "null"] },
         "conformance": { "enum": ["core", "search"] },

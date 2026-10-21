@@ -27,6 +27,13 @@ CREATE TABLE child (
   label VARCHAR(40) DEFAULT 'x',
   note TEXT
 );
+-- A COMPOSITE foreign key: the shape that a name-only join multiplies.
+CREATE TABLE pair (x INTEGER NOT NULL, y INTEGER NOT NULL, PRIMARY KEY (x, y));
+CREATE TABLE link (
+  id INTEGER PRIMARY KEY,
+  x INTEGER, y INTEGER,
+  FOREIGN KEY (x, y) REFERENCES pair (x, y) ON DELETE CASCADE
+);
 SQL
 
 section () {
@@ -65,23 +72,28 @@ SELECT json_agg(t) FROM (
   ORDER BY tc.table_name, kcu.ordinal_position
 ) t"
 
+# The referenced side MUST be joined through position_in_unique_constraint.
+# Joining constraint_column_usage by name instead matches every column of the
+# referenced constraint against every column of the key, so a 2-column composite
+# FK yields 4 rows -- x->y and y->x included. Measured 2026-10-21.
 section "foreignKeys" "
 SELECT json_agg(t) FROM (
   SELECT tc.table_name, tc.constraint_name, kcu.column_name, kcu.ordinal_position,
-         ccu.table_name AS foreign_table, ccu.column_name AS foreign_column,
+         ref.table_name AS foreign_table, ref.column_name AS foreign_column,
          rc.delete_rule, rc.update_rule
   FROM information_schema.table_constraints tc
   JOIN information_schema.key_column_usage kcu
     ON kcu.constraint_name = tc.constraint_name
    AND kcu.table_schema = tc.table_schema
-  JOIN information_schema.constraint_column_usage ccu
-    ON ccu.constraint_name = tc.constraint_name
-   AND ccu.table_schema = tc.table_schema
   JOIN information_schema.referential_constraints rc
     ON rc.constraint_name = tc.constraint_name
    AND rc.constraint_schema = tc.table_schema
+  JOIN information_schema.key_column_usage ref
+    ON ref.constraint_name = rc.unique_constraint_name
+   AND ref.constraint_schema = rc.unique_constraint_schema
+   AND ref.ordinal_position = kcu.position_in_unique_constraint
   WHERE tc.table_schema = 'public' AND tc.constraint_type = 'FOREIGN KEY'
-  ORDER BY tc.table_name, kcu.ordinal_position
+  ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position
 ) t"
 
 $PSQL -q -c "DROP DATABASE $DB" >/dev/null
