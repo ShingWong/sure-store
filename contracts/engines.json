@@ -2,6 +2,24 @@
   "$schema": "./engines.schema.json",
   "specVersion": "0.1.0",
   "note": "Every value here was measured against a live engine. See spec/02-engine-matrix.md for the probe that produced each one, and verification/live/ for the probes themselves. Do not edit from memory — re-run the probe.",
+  "typeAxis": {
+    "note": "The canonical axis records WHAT THE ENGINE STORES, not what a consumer wants for its UI. Measured 2026-10-22; see spec/06-canonical-types.md.",
+    "canonical": [
+      "boolean", "smallint", "integer", "bigint", "real", "double", "numeric",
+      "text", "citext", "binary", "date", "time", "timestamp", "timestamp_tz",
+      "json", "uuid"
+    ],
+    "affinity": {
+      "note": "SQLite's documented rule ORDER, measured on 3.51.3. The axis records AFFINITY, not the declared name: VARCHAR(40) -> text, INT -> integer, REAL -> real, BLOB or an empty declaration -> binary, and everything else (BOOLEAN, DATETIME, NUMERIC) -> numeric. Measured storage is not the affinity: a '1' in a BOOLEAN column reports typeof integer and a date string in a DATETIME column stays text — both are NUMERIC affinity, and neither is enforcement. Order matters: INT before CHAR, CHAR before BLOB, BLOB before REAL.",
+      "rules": [
+        { "match": "contains", "values": ["INT"], "canonical": "integer" },
+        { "match": "contains", "values": ["CHAR", "CLOB", "TEXT"], "canonical": "text" },
+        { "match": "contains-or-empty", "values": ["BLOB"], "canonical": "binary" },
+        { "match": "contains", "values": ["REAL", "FLOA", "DOUB"], "canonical": "real" },
+        { "match": "otherwise", "canonical": "numeric" }
+      ]
+    }
+  },
   "engines": {
     "sqlite": {
     "introspection": {
@@ -96,6 +114,7 @@
       },
       "types": {
         "enforced": false,
+        "canonical": { "by": "affinity" },
         "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
         "note": "SQLite assigns AFFINITY and accepts any type name verbatim, so nothing here is enforced — the map is a RECOMMENDATION, not a constraint, and an unknown type name is NOT an error (measured). The load-bearing fact is jsonb -> TEXT: the extraction operators -> and ->> DO work (SQLite 3.38+), but containment/existence (@>, ?, ?|, ?&) and GIN indexes do not."
       },
@@ -177,6 +196,7 @@
       },
       "types": {
         "enforced": false,
+        "canonical": { "by": "affinity" },
         "map": { "timestamptz": "TEXT", "boolean": "INTEGER", "jsonb": "TEXT" },
         "note": "AFFINITY, as on sqlite: any type name is accepted, nothing is enforced. Injection and extraction DO work: json_extract, json_valid, and the -> / ->> operators (measured). Containment/existence (@>, ?, ?|, ?&) and GIN indexes do not."
       },
@@ -304,6 +324,19 @@
       },
       "types": {
         "enforced": true,
+        "canonical": {
+          "by": "udt_name",
+          "note": "Measured on PostgreSQL 16.15 across 21 types. citext is deliberately its own canonical type rather than text: collapsing it would silently drop the case-insensitivity a consumer chose the type for. Anything absent from this map is an ERROR, never 'other' — inet, interval, tsvector, money and xml are genuinely unmapped today.",
+          "map": {
+            "bool": "boolean", "int2": "smallint", "int4": "integer", "int8": "bigint",
+            "float4": "real", "float8": "double", "numeric": "numeric",
+            "text": "text", "varchar": "text", "bpchar": "text", "char": "text",
+            "citext": "citext", "bytea": "binary",
+            "date": "date", "time": "time", "timetz": "time",
+            "timestamp": "timestamp", "timestamptz": "timestamp_tz",
+            "json": "json", "jsonb": "json", "uuid": "uuid"
+          }
+        },
         "map": { "timestamptz": "TIMESTAMPTZ", "boolean": "BOOLEAN", "jsonb": "JSONB" },
         "note": "Native types, and jsonb round-trips as jsonb. Every operator works — ->, ->>, @>, ?, ?|, ?& — and GIN indexes are available. The embedded engines have -> and ->> only."
       },

@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { EngineMap } from "./render.ts";
+import type { EngineMap, TypeAxis } from "./render.ts";
 
 /**
  * The package's contracts file: the nearest ancestor of this module holding
@@ -28,14 +28,28 @@ function contractFile(): string {
   throw new Error("sure-store: contracts/engines.json not found next to the installed package");
 }
 
+export interface ContractDocument {
+  specVersion: string;
+  engines: EngineMap;
+  bindings: Record<string, unknown>;
+  typeAxis: TypeAxis;
+}
+
+/**
+ * Load the whole contract, or an explicit path.
+ *
+ * `loadContracts` returns only the engines; the axis and the bindings are equally
+ * public contract facts (a consumer that needs binding styles should not have to
+ * re-parse the JSON to reach them).
+ */
+export function loadDocument(path?: string): ContractDocument {
+  const file = path ?? contractFile();
+  return JSON.parse(readFileSync(file, "utf8")) as ContractDocument;
+}
+
 /** Load contracts/engines.json, or an explicit path. */
 export function loadContracts(path?: string): EngineMap {
-  const file = path ?? contractFile();
-  const parsed = JSON.parse(readFileSync(file, "utf8")) as {
-    specVersion: string;
-    engines: EngineMap;
-  };
-  return parsed.engines;
+  return loadDocument(path).engines;
 }
 
 /** The spec version the tables declare, so a consumer can pin it. */

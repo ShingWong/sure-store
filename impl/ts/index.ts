@@ -41,3 +41,8 @@ export {
   normalizeTables,
   renderIntrospection,
 } from "./introspect.ts";
+
+export type { AffinityRule } from "./canonical.ts";
+export { canonicalType } from "./canonical.ts";
+export type { ContractDocument } from "./load.ts";
+export { loadDocument } from "./load.ts";

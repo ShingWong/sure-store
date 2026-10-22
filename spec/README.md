@@ -10,6 +10,7 @@ adding a new one.
 | 03 | [FTS semantics](03-fts-semantics.md) | what can and cannot be made equal across engines |
 | 04 | [Open questions](04-open-questions.md) | undecided: escape syntax, stemming default, shared schema DSL |
 | 05 | [The driver slot](05-driver-slot.md) | what a driver sibling is, and the criteria for creating one |
+| 06 | [Canonical type axis](06-canonical-types.md) | what a column stores, and why it is not what a consumer wants |
 
 ## Conformance levels
 

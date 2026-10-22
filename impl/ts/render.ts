@@ -51,6 +51,24 @@ export interface EngineIntrospection {
   traps?: string[];
 }
 
+export interface CanonicalTypes {
+  by: "affinity" | "udt_name";
+  map?: Record<string, string>;
+  note?: string;
+}
+
+export interface AffinityAxisRule {
+  match: "contains" | "contains-or-empty" | "otherwise";
+  values?: string[];
+  canonical: string;
+}
+
+export interface TypeAxis {
+  canonical: string[];
+  affinity: { rules: AffinityAxisRule[]; note?: string };
+  note?: string;
+}
+
 export interface EngineContract {
   kind: string;
   fileFormat: string | null;
@@ -63,6 +81,13 @@ export interface EngineContract {
   introspection?: EngineIntrospection;
   /** Quote character for identifiers; used where a name cannot be bound. */
   identifierQuote?: string;
+  /** Generation map (logical -> DDL) and the introspection map (engine -> axis). */
+  types?: {
+    enforced: boolean;
+    map: Record<string, string>;
+    canonical?: CanonicalTypes;
+    note?: string;
+  };
 }
 
 export type EngineMap = Record<string, EngineContract>;

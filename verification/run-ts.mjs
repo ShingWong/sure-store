@@ -24,7 +24,7 @@ import {
   normalizePrimaryKeys,
   applyNullability,
 } from "../impl/ts/index.ts";
-import { loadContracts, specVersion } from "../impl/ts/index.ts";
+import { canonicalType, loadContracts, loadDocument, specVersion } from "../impl/ts/index.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = JSON.parse(
@@ -222,6 +222,28 @@ console.log("introspection — render");
       })),
       c.expects,
     );
+  }
+}
+
+console.log("canonical types");
+{
+  const types = JSON.parse(readFileSync(join(here, "fixtures", "types.json"), "utf8"));
+  const doc = loadDocument();
+  for (const c of types.cases) {
+    check(
+      `${c.engine} ${c.raw || "(empty declaration)"} -> ${c.expects}`,
+      canonicalType(getEngine(engines, c.engine), c.raw, doc.typeAxis),
+      c.expects,
+    );
+  }
+  for (const c of types.refuses) {
+    let threw = false;
+    try {
+      canonicalType(getEngine(engines, c.engine), c.raw, doc.typeAxis);
+    } catch {
+      threw = true;
+    }
+    check(`${c.engine} ${c.raw} refuses (${c.why})`, threw, true);
   }
 }
 

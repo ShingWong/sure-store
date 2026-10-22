@@ -1,0 +1,63 @@
+{
+  "id": "types",
+  "why": "The canonical axis records what the engine STORES, not what a consumer wants. sqlite is mapped by AFFINITY because its declared type is a hint and nothing is enforced; Postgres is mapped by udt_name because the type is real. A type the tables do not describe refuses — it never becomes \"other\", and citext never becomes text.",
+  "cases": [
+    { "engine": "sqlite", "raw": "INTEGER", "expects": "integer" },
+    { "engine": "sqlite", "raw": "BIGINT", "expects": "integer" },
+    { "engine": "sqlite", "raw": "POINT", "expects": "integer" },
+    { "engine": "sqlite", "raw": "VARCHAR(40)", "expects": "text" },
+    { "engine": "sqlite", "raw": "TEXT", "expects": "text" },
+    { "engine": "sqlite", "raw": "CLOB", "expects": "text" },
+    { "engine": "sqlite", "raw": "REAL", "expects": "real" },
+    { "engine": "sqlite", "raw": "DOUBLE PRECISION", "expects": "real" },
+    { "engine": "sqlite", "raw": "BLOB", "expects": "binary" },
+    { "engine": "sqlite", "raw": "", "expects": "binary" },
+    { "engine": "sqlite", "raw": "BOOLEAN", "expects": "numeric" },
+    { "engine": "sqlite", "raw": "DATETIME", "expects": "numeric" },
+    { "engine": "sqlite", "raw": "NUMERIC", "expects": "numeric" },
+    { "engine": "turso", "raw": "VARCHAR(40)", "expects": "text" },
+    { "engine": "turso", "raw": "BOOLEAN", "expects": "numeric" },
+    { "engine": "postgres", "raw": "bool", "expects": "boolean" },
+    { "engine": "postgres", "raw": "int2", "expects": "smallint" },
+    { "engine": "postgres", "raw": "int4", "expects": "integer" },
+    { "engine": "postgres", "raw": "int8", "expects": "bigint" },
+    { "engine": "postgres", "raw": "float4", "expects": "real" },
+    { "engine": "postgres", "raw": "float8", "expects": "double" },
+    { "engine": "postgres", "raw": "numeric", "expects": "numeric" },
+    { "engine": "postgres", "raw": "text", "expects": "text" },
+    { "engine": "postgres", "raw": "varchar", "expects": "text" },
+    { "engine": "postgres", "raw": "bpchar", "expects": "text" },
+    { "engine": "postgres", "raw": "citext", "expects": "citext" },
+    { "engine": "postgres", "raw": "bytea", "expects": "binary" },
+    { "engine": "postgres", "raw": "date", "expects": "date" },
+    { "engine": "postgres", "raw": "time", "expects": "time" },
+    { "engine": "postgres", "raw": "timetz", "expects": "time" },
+    { "engine": "postgres", "raw": "timestamp", "expects": "timestamp" },
+    { "engine": "postgres", "raw": "timestamptz", "expects": "timestamp_tz" },
+    { "engine": "postgres", "raw": "json", "expects": "json" },
+    { "engine": "postgres", "raw": "jsonb", "expects": "json" },
+    { "engine": "postgres", "raw": "uuid", "expects": "uuid" }
+  ],
+  "refuses": [
+    {
+      "engine": "postgres",
+      "raw": "inet",
+      "why": "measured and genuinely unmapped — a consumer must decide, so the mapper refuses rather than inventing a category"
+    },
+    {
+      "engine": "postgres",
+      "raw": "interval",
+      "why": "unmapped; time intervals are not the same axis as timestamps"
+    },
+    {
+      "engine": "postgres",
+      "raw": "tsvector",
+      "why": "a search artefact, not a value type a consumer should see"
+    }
+  ],
+  "notes": {
+    "citext": "Deliberate divergence from sure-factor's own habit: CITEXT is NOT text here. Collapsing it would drop the case-insensitivity the type was chosen for, which is a semantic property, not a formatting one.",
+    "sqliteAffinity": "BOOLEAN and DATETIME map to numeric, not boolean and timestamp. That is not a limitation of the mapper: SQLite enforces nothing, so claiming a boolean would assert a constraint the engine does not hold.",
+    "valuesNotAffinity": "Measured: a '1' in a BOOLEAN column reports typeof integer, and a date string in a DATETIME column stays text. Both are NUMERIC affinity; neither is storage enforcement."
+  }
+}

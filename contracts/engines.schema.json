@@ -14,7 +14,8 @@
       "minProperties": 1,
       "additionalProperties": { "$ref": "#/definitions/engine" }
     },
-    "bindings": {
+    "typeAxis": { "$ref": "#/definitions/typeAxis" },
+  "bindings": {
       "type": "object",
       "additionalProperties": {
         "oneOf": [
@@ -72,6 +73,52 @@
           }
         },
         "primaryKeyPosition": { "type": ["string", "null"] }
+      }
+    },
+    "canonicalTypes": {
+      "type": "object",
+      "required": ["by"],
+      "additionalProperties": true,
+      "properties": {
+        "by": { "enum": ["affinity", "udt_name"] },
+        "map": { "type": "object", "additionalProperties": { "type": "string" } },
+        "note": { "type": "string" }
+      },
+      "oneOf": [
+        { "properties": { "by": { "const": "affinity" } } },
+        {
+          "properties": { "by": { "const": "udt_name" } },
+          "required": ["map"]
+        }
+      ]
+    },
+    "typeAxis": {
+      "type": "object",
+      "required": ["canonical", "affinity"],
+      "additionalProperties": true,
+      "properties": {
+        "note": { "type": "string" },
+        "canonical": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "affinity": {
+          "type": "object",
+          "required": ["rules"],
+          "properties": {
+            "note": { "type": "string" },
+            "rules": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["match", "canonical"],
+                "properties": {
+                  "match": { "enum": ["contains", "contains-or-empty", "otherwise"] },
+                  "values": { "type": "array", "items": { "type": "string" } },
+                  "canonical": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "binding": {
@@ -184,6 +231,7 @@
           "properties": {
             "enforced": { "type": "boolean" },
             "map": { "type": "object", "additionalProperties": { "type": "string" } },
+            "canonical": { "$ref": "#/definitions/canonicalTypes" },
             "note": { "type": "string" }
           }
         },
