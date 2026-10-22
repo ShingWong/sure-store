@@ -30,6 +30,27 @@ export interface EngineFts {
   traps?: string[];
 }
 
+/** One introspection statement, as declared per section in the contract. */
+export interface IntrospectionQuery {
+  sql?: string;
+  /** How a per-table statement receives its table: inlined and quoted, or bound. */
+  tableRef?: "inline-quoted" | "bound";
+  constraintKey?: string;
+  fields?: Record<string, string | null>;
+  nullability?: { field: string; nullableValue: unknown };
+  primaryKeyPosition?: string | null;
+}
+
+export interface EngineIntrospection {
+  scope: "per-table" | "set-based";
+  params?: string[];
+  tables?: IntrospectionQuery;
+  columns?: IntrospectionQuery;
+  primaryKeys?: IntrospectionQuery | { source: "columns" };
+  foreignKeys?: IntrospectionQuery;
+  traps?: string[];
+}
+
 export interface EngineContract {
   kind: string;
   fileFormat: string | null;
@@ -39,6 +60,9 @@ export interface EngineContract {
   schemaVersion: { strategy: string; table?: string; read: string; write: string };
   columnProbe: { strategy: string; sql: string };
   fts: EngineFts;
+  introspection?: EngineIntrospection;
+  /** Quote character for identifiers; used where a name cannot be bound. */
+  identifierQuote?: string;
 }
 
 export type EngineMap = Record<string, EngineContract>;

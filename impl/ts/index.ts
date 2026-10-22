@@ -25,3 +25,19 @@ export type {
 } from "./render.ts";
 
 export { loadContracts, specVersion } from "./load.ts";
+
+export type {
+  ColumnRecord,
+  ForeignKeyRecord,
+  IntrospectionSection,
+  PrimaryKeyRecord,
+  TableRecord,
+} from "./introspect.ts";
+export {
+  applyNullability,
+  normalizeColumns,
+  normalizeForeignKeys,
+  normalizePrimaryKeys,
+  normalizeTables,
+  renderIntrospection,
+} from "./introspect.ts";

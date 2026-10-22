@@ -1,0 +1,275 @@
+{
+  "id": "introspect",
+  "why": "Introspection is not one query shape. sqlite is per-table because PRAGMA takes no argument, so the table name is inlined and MUST be quoted; Postgres is set-based with a bound schema. The rows then normalize into one record, and the rule that makes the engines agree \u2014 nullable = rawNullable AND NOT isPrimaryKey \u2014 is pinned here with the rows that originally disagreed.",
+  "render": {
+    "cases": [
+      {
+        "engine": "sqlite",
+        "section": "columns",
+        "table": "parent",
+        "sql": "PRAGMA table_info(\"parent\")",
+        "params": []
+      },
+      {
+        "engine": "sqlite",
+        "section": "columns",
+        "table": "we\"ird",
+        "sql": "PRAGMA table_info(\"we\"\"ird\")"
+      },
+      {
+        "engine": "postgres",
+        "section": "columns",
+        "schema": "public",
+        "params": [
+          "public"
+        ],
+        "placeholderCount": 1
+      }
+    ],
+    "refuses": [
+      {
+        "engine": "turso",
+        "section": "columns",
+        "why": "introspection is not declared for this engine \u2014 absent is not empty"
+      },
+      {
+        "engine": "sqlite",
+        "section": "primaryKeys",
+        "why": "sqlite derives the key from the columns result; there is no statement to render"
+      }
+    ]
+  },
+  "columns": {
+    "sqlite": {
+      "table": "parent",
+      "rows": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "note",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "expects": [
+        {
+          "name": "id",
+          "nullable": false,
+          "primaryKeyPosition": 1
+        },
+        {
+          "name": "note",
+          "nullable": true,
+          "primaryKeyPosition": 0
+        }
+      ]
+    },
+    "postgres": {
+      "rows": [
+        {
+          "table_name": "parent",
+          "ordinal_position": 1,
+          "column_name": "id",
+          "data_type": "integer",
+          "udt_name": "int4",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": null
+        },
+        {
+          "table_name": "parent",
+          "ordinal_position": 2,
+          "column_name": "note",
+          "data_type": "text",
+          "udt_name": "text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null
+        }
+      ],
+      "expects": [
+        {
+          "name": "id",
+          "nullable": false,
+          "primaryKeyPosition": null
+        },
+        {
+          "name": "note",
+          "nullable": true,
+          "primaryKeyPosition": null
+        }
+      ]
+    }
+  },
+  "primaryKeys": {
+    "sqlite": {
+      "rows": [],
+      "deriveFromColumns": true,
+      "expects": [
+        {
+          "table": "parent",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    "postgres": {
+      "rows": [
+        {
+          "table_name": "child",
+          "column_name": "id",
+          "ordinal_position": 1
+        },
+        {
+          "table_name": "pair",
+          "column_name": "x",
+          "ordinal_position": 1
+        },
+        {
+          "table_name": "pair",
+          "column_name": "y",
+          "ordinal_position": 2
+        }
+      ],
+      "expects": [
+        {
+          "table": "child",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "table": "pair",
+          "columns": [
+            "x",
+            "y"
+          ]
+        }
+      ]
+    }
+  },
+  "foreignKeys": {
+    "sqlite": {
+      "table": "link",
+      "rows": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "pair",
+          "from": "x",
+          "to": "x",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        },
+        {
+          "id": 0,
+          "seq": 1,
+          "table": "pair",
+          "from": "y",
+          "to": "y",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "expects": [
+        {
+          "table": "link",
+          "columns": [
+            "x",
+            "y"
+          ],
+          "refTable": "pair",
+          "refColumns": [
+            "x",
+            "y"
+          ]
+        }
+      ]
+    },
+    "postgres": {
+      "rows": [
+        {
+          "table_name": "child",
+          "constraint_name": "child_parent_id_fkey",
+          "column_name": "parent_id",
+          "ordinal_position": 1,
+          "foreign_table": "parent",
+          "foreign_column": "id",
+          "delete_rule": "CASCADE",
+          "update_rule": "RESTRICT"
+        },
+        {
+          "table_name": "link",
+          "constraint_name": "link_x_y_fkey",
+          "column_name": "x",
+          "ordinal_position": 1,
+          "foreign_table": "pair",
+          "foreign_column": "x",
+          "delete_rule": "CASCADE",
+          "update_rule": "NO ACTION"
+        },
+        {
+          "table_name": "link",
+          "constraint_name": "link_x_y_fkey",
+          "column_name": "y",
+          "ordinal_position": 2,
+          "foreign_table": "pair",
+          "foreign_column": "y",
+          "delete_rule": "CASCADE",
+          "update_rule": "NO ACTION"
+        }
+      ],
+      "expects": [
+        {
+          "table": "child",
+          "columns": [
+            "parent_id"
+          ],
+          "refTable": "parent",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "table": "link",
+          "columns": [
+            "x",
+            "y"
+          ],
+          "refTable": "pair",
+          "refColumns": [
+            "x",
+            "y"
+          ]
+        }
+      ]
+    },
+    "mustNotHappen": "cross-product pairs. The naive Postgres join produced x->y and y->x; the record must carry only the two real pairs, so a 4-row result would fail here rather than reach a consumer."
+  },
+  "statementGuards": [
+    {
+      "engine": "postgres",
+      "section": "foreignKeys",
+      "contains": [
+        "unique_constraint_name",
+        "position_in_unique_constraint"
+      ],
+      "absent": [
+        "constraint_column_usage"
+      ],
+      "why": "the referenced side must be joined through the unique constraint and positioned; joining constraint_column_usage by name returns a cross product (x->y, y->x) that looks like data"
+    }
+  ]
+}

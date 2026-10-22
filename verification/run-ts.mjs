@@ -18,6 +18,11 @@ import {
   renderMatchParam,
   renderPlaceholder,
   renderSearch,
+  renderIntrospection,
+  normalizeColumns,
+  normalizeForeignKeys,
+  normalizePrimaryKeys,
+  applyNullability,
 } from "../impl/ts/index.ts";
 import { loadContracts, specVersion } from "../impl/ts/index.ts";
 
@@ -137,6 +142,87 @@ for (const c of fixtures.placeholder.refuses) {
     renderPlaceholder("positional-dollar", 2),
     "$2",
   );
+}
+
+console.log("introspection — render");
+{
+  const introspect = JSON.parse(readFileSync(join(here, "fixtures", "introspect.json"), "utf8"));
+  for (const c of introspect.render.cases) {
+    const out = renderIntrospection(getEngine(engines, c.engine), c.section, {
+      table: c.table,
+      schema: c.schema,
+    });
+    if (c.sql !== undefined) check(`${c.engine} ${c.section} sql`, out.sql, c.sql);
+    if (c.params !== undefined) check(`${c.engine} ${c.section} params`, out.params, c.params);
+    if (c.placeholderCount !== undefined) {
+      check(`${c.engine} ${c.section} placeholder count`, (out.sql.match(/\?/g) ?? []).length, c.placeholderCount);
+    }
+  }
+  for (const c of introspect.render.refuses) {
+    let threw = false;
+    try {
+      renderIntrospection(getEngine(engines, c.engine), c.section, { table: "t", schema: "public" });
+    } catch {
+      threw = true;
+    }
+    check(`introspection ${c.engine} ${c.section} refuses (${c.why})`, threw, true);
+  }
+
+  for (const g of introspect.statementGuards ?? []) {
+    const { sql } = renderIntrospection(getEngine(engines, g.engine), g.section, {
+      table: "t",
+      schema: "public",
+    });
+    for (const needle of g.contains) {
+      check(`${g.engine} ${g.section} statement contains ${needle}`, sql.includes(needle), true);
+    }
+    for (const needle of g.absent) {
+      check(`${g.engine} ${g.section} statement avoids ${needle}`, sql.includes(needle), false);
+    }
+  }
+
+  console.log("introspection — normalize");
+  for (const [name, c] of Object.entries(introspect.columns)) {
+    const engine = getEngine(engines, name);
+    const columns = normalizeColumns(engine, c.rows, { table: c.table });
+    const keys = normalizePrimaryKeys(engine, [], columns);
+    check(
+      `${name} columns → nullability (${introspect.why})`,
+      applyNullability(columns, keys).map((x) => ({
+        name: x.name,
+        nullable: x.nullable,
+        primaryKeyPosition: x.primaryKeyPosition,
+      })),
+      c.expects,
+    );
+  }
+
+  for (const [name, c] of Object.entries(introspect.primaryKeys)) {
+    const engine = getEngine(engines, name);
+    const columns = c.deriveFromColumns
+      ? normalizeColumns(engine, introspect.columns[name].rows, { table: introspect.columns[name].table })
+      : undefined;
+    check(
+      `${name} primary keys`,
+      normalizePrimaryKeys(engine, c.rows, columns),
+      c.expects,
+    );
+  }
+
+  for (const [name, c] of Object.entries(introspect.foreignKeys)) {
+    if (typeof c !== "object" || !c.rows) continue;
+    const engine = getEngine(engines, name);
+    check(
+      `${name} foreign keys — grouped, ordered, no cross product`,
+      normalizeForeignKeys(engine, c.rows, { table: c.table }).map((k) => ({
+        table: k.table,
+        columns: k.columns,
+        refTable: k.refTable,
+        refColumns: k.refColumns,
+      })),
+      c.expects,
+    );
+  }
 }
 
 console.log("fail closed");
