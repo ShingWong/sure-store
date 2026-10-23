@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "id": "stmt-shape",
   "why": "the shape of a statement — what an engine accepts, what it values, and where a declaration is only a recommendation — pinned by execution rather than documentation.",
   "from": "FR-2 (mgmt-pg), as contributed; case format fixed and checks added before landing",

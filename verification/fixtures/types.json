@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "id": "types",
   "why": "The canonical axis records what the engine STORES, not what a consumer wants. sqlite is mapped by AFFINITY because its declared type is a hint and nothing is enforced; Postgres is mapped by udt_name because the type is real. A type the tables do not describe refuses — it never becomes \"other\", and citext never becomes text.",
   "cases": [

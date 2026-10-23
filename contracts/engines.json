@@ -1,6 +1,6 @@
 {
   "$schema": "./engines.schema.json",
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "note": "Every value here was measured against a live engine. See spec/02-engine-matrix.md for the probe that produced each one, and verification/live/ for the probes themselves. Do not edit from memory — re-run the probe.",
   "typeAxis": {
     "note": "The canonical axis records WHAT THE ENGINE STORES, not what a consumer wants for its UI. Measured 2026-10-22; see spec/06-canonical-types.md.",

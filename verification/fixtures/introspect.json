@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "id": "introspect",
   "why": "Introspection is not one query shape. sqlite is per-table because PRAGMA takes no argument, so the table name is inlined and MUST be quoted; Postgres is set-based with a bound schema. The rows then normalize into one record, and the rule that makes the engines agree — nullable = rawNullable AND NOT isPrimaryKey — is pinned here with the rows that originally disagreed.",
   "render": {
