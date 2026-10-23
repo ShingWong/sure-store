@@ -18,6 +18,7 @@ import {
   renderMatchParam,
   renderPlaceholder,
   renderSearch,
+  ftsConfig,
   renderIntrospection,
   normalizeColumns,
   normalizeForeignKeys,
@@ -100,6 +101,41 @@ for (const name of ENGINES) {
   const rendered = renderSearch(getEngine(engines, name), fixtures.search.input);
   check(`${name} search sql (${fixtures.search.why})`, rendered.sql, fixtures.search[name].sql);
   check(`${name} search params`, rendered.params, fixtures.search[name].params);
+}
+
+console.log("engine kind");
+for (const name of ENGINES) {
+  const e = getEngine(engines, name);
+  // Q5 (spec/04): "server" stays visible at the point of choice because every
+  // engine declares it. A contract that stopped declaring it would be silent.
+  check(`${name} declares kind (embedded | server)`, e.kind === "embedded" || e.kind === "server", true);
+}
+
+console.log("fts config");
+{
+  const c = fixtures.ftsConfig;
+  for (const name of ENGINES) {
+    const e = getEngine(engines, name);
+    if (!e.fts?.defaultConfig) continue;
+    check(`${name} default fts config is the parity config`, ftsConfig(e), e.fts.defaultConfig);
+  }
+  const engine = getEngine(engines, c.engine);
+  check(
+    `${c.engine} search with the declared non-parity config (${c.why})`,
+    renderSearch(engine, { ...c.input, config: c.alternative }).sql,
+    c.englishSql,
+  );
+  let refused = null;
+  try {
+    renderSearch(engine, { ...c.input, config: c.undeclared });
+  } catch (err) {
+    refused = String(err && err.message);
+  }
+  check(
+    `${c.engine} undeclared config refuses rather than rendering`,
+    refused !== null && refused.includes(c.undeclared),
+    true,
+  );
 }
 
 console.log("placeholder");

@@ -129,6 +129,33 @@ export function renderMatchParam(engine: EngineContract, terms: string[]): strin
   throw new Error(`sure-store: unknown match param kind '${kind}'`);
 }
 
+/**
+ * The text-search config a renderer may use.
+ *
+ * `fts.defaultConfig` is the **parity** config — on postgres `simple`, which
+ * stems nothing, the closest match to sqlite's `unicode61` (spec/03). A declared
+ * non-parity config (`english`) is a real capability, not a hazard to prohibit:
+ * it is asked for **by name**, never selected by default, and the trap beside it
+ * in the tables records that it matches more than the other engines would.
+ *
+ * An undeclared config refuses. Rendering `to_tsvector('klingon', …)` would be
+ * accepted by neither engine nor contract, and a silent fallback to the default
+ * would hide the caller's mistake — the same failure this repository keeps
+ * designing out.
+ */
+export function ftsConfig(engine: EngineContract, requested?: string): string {
+  if (requested !== undefined) {
+    const declared = engine.fts?.configs ?? [];
+    if (!declared.includes(requested)) {
+      throw new Error(
+        `sure-store: fts config "${requested}" is not declared for this engine ` +
+          `(declared: ${declared.length ? declared.join(", ") : "none"}) — refusing to render a guess`,
+      );
+    }
+  }
+  return requested ?? engine.fts?.defaultConfig ?? "";
+}
+
 export interface FtsDdlOptions {
   name: string;
   table: string;
@@ -142,7 +169,7 @@ export function renderFtsDdl(engine: EngineContract, opts: FtsDdlOptions): strin
     name: opts.name,
     table: opts.table,
     cols: opts.cols.join(", "),
-    config: opts.config ?? engine.fts.defaultConfig ?? "",
+    config: ftsConfig(engine, opts.config),
     expr: opts.cols.map((c) => `coalesce(${c},'')`).join(" || ' ' || "),
   };
   const statements = [substitute(engine.fts.ddl, vars)];
@@ -271,7 +298,7 @@ export function renderSearch(
     name: opts.name,
     table: opts.table,
     cols: opts.cols.join(", "),
-    config: opts.config ?? engine.fts.defaultConfig ?? "",
+    config: ftsConfig(engine, opts.config),
   };
   const ph = (n: number): string => (opts.params ? renderPlaceholder(opts.params, n) : "?");
   const predicate = bindOne(substitute(engine.fts.match.predicate, vars), "the match predicate", ph(1));

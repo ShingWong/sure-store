@@ -8,7 +8,7 @@ adding a new one.
 | 01 | [Capability model](01-capability-model.md) | the dimensions an engine must declare, and the fail-closed rule |
 | 02 | [Engine matrix](02-engine-matrix.md) | the measured values for sqlite, turso, postgres — **normative** |
 | 03 | [FTS semantics](03-fts-semantics.md) | what can and cannot be made equal across engines |
-| 04 | [Open questions](04-open-questions.md) | undecided: escape syntax, stemming default, shared schema DSL |
+| 04 | [Open questions](04-open-questions.md) | each question with its answer, its reasons, and what would reopen it |
 | 05 | [The driver slot](05-driver-slot.md) | what a driver sibling is, and the criteria for creating one |
 | 06 | [Canonical type axis](06-canonical-types.md) | what a column stores, and why it is not what a consumer wants |
 

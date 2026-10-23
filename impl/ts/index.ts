@@ -13,6 +13,7 @@ export {
   ftsSyncStatements,
   renderSearch,
   renderPlaceholder,
+  ftsConfig,
 } from "./render.ts";
 
 export type {

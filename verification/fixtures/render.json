@@ -4,28 +4,37 @@
   "matchParam": [
     {
       "why": "single term",
-      "terms": ["invoice"],
+      "terms": [
+        "invoice"
+      ],
       "sqlite": "\"invoice\"",
       "turso": "\"invoice\"",
       "postgres": "invoice"
     },
     {
       "why": "several terms: a conjunction in every dialect",
-      "terms": ["invoice", "attached"],
+      "terms": [
+        "invoice",
+        "attached"
+      ],
       "sqlite": "\"invoice\" \"attached\"",
       "turso": "\"invoice\" \"attached\"",
       "postgres": "invoice attached"
     },
     {
       "why": "the core strips quotes, so user input cannot break the expression",
-      "terms": ["a\"b"],
+      "terms": [
+        "a\"b"
+      ],
       "sqlite": "\"ab\"",
       "turso": "\"ab\"",
       "postgres": "a\"b"
     },
     {
       "why": "terms the engine tokenises as one token must stay one term",
-      "terms": ["billing@example.com"],
+      "terms": [
+        "billing@example.com"
+      ],
       "sqlite": "\"billing@example.com\"",
       "turso": "\"billing@example.com\"",
       "postgres": "billing@example.com"
@@ -35,7 +44,11 @@
     "input": {
       "name": "messages_fts",
       "table": "messages",
-      "cols": ["subject", "fromaddr", "body_text"]
+      "cols": [
+        "subject",
+        "fromaddr",
+        "body_text"
+      ]
     },
     "sqlite": [
       "CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(subject, fromaddr, body_text, content='messages', content_rowid='rowid', tokenize='unicode61')"
@@ -56,7 +69,15 @@
   },
   "ftsTriggers": {
     "why": "the schema-owned trio. Required for sqlite: removal needs the documented 'delete' command carrying the OLD column values, which only a trigger has.",
-    "input": { "name": "messages_fts", "table": "messages", "cols": ["subject", "fromaddr", "body_text"] },
+    "input": {
+      "name": "messages_fts",
+      "table": "messages",
+      "cols": [
+        "subject",
+        "fromaddr",
+        "body_text"
+      ]
+    },
     "sqlite": [
       "CREATE TRIGGER IF NOT EXISTS messages_fts_ai AFTER INSERT ON messages BEGIN INSERT INTO messages_fts(rowid, subject, fromaddr, body_text) VALUES (new.rowid, new.subject, new.fromaddr, new.body_text); END",
       "CREATE TRIGGER IF NOT EXISTS messages_fts_ad AFTER DELETE ON messages BEGIN INSERT INTO messages_fts(messages_fts, rowid, subject, fromaddr, body_text) VALUES ('delete', old.rowid, old.subject, old.fromaddr, old.body_text); END",
@@ -69,40 +90,78 @@
     "input": {
       "table": "messages",
       "name": "messages_fts",
-      "cols": ["subject", "fromaddr", "body_text"],
+      "cols": [
+        "subject",
+        "fromaddr",
+        "body_text"
+      ],
       "select": "m.uid, m.folder, m.subject, m.fromaddr, m.internaldate",
       "orderBy": "m.internaldate",
-      "terms": ["invoice"],
+      "terms": [
+        "invoice"
+      ],
       "limit": 50
     },
     "why": "select and orderBy are identical across engines because every dialect aliases the table as m",
     "sqlite": {
       "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages_fts f JOIN messages m ON m.rowid = f.rowid WHERE messages_fts MATCH ? ORDER BY m.internaldate DESC LIMIT ?",
-      "params": ["\"invoice\"", 50]
+      "params": [
+        "\"invoice\"",
+        50
+      ]
     },
     "turso": {
       "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages m WHERE fts_match(subject, fromaddr, body_text, ?) ORDER BY m.internaldate DESC LIMIT ?",
-      "params": ["\"invoice\"", 50]
+      "params": [
+        "\"invoice\"",
+        50
+      ]
     },
     "postgres": {
       "sql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages m WHERE messages_fts @@ plainto_tsquery('simple', ?) ORDER BY m.internaldate DESC LIMIT ?",
-      "params": ["invoice", 50]
+      "params": [
+        "invoice",
+        50
+      ]
     }
   },
   "failClosed": {
     "why": "an engine the tables do not describe must throw, never fall back to a default dialect",
     "unknownEngine": "mysql"
-  }
-  ,
+  },
   "placeholder": {
     "why": "the Nth placeholder is COMPOSED from bindings.<b>.params while the statement is built. Never a rewrite of arbitrary SQL: ? is also the jsonb existence operator and it appears inside string literals, so a textual conversion turns detail ? 'key' into detail $1 'key'. Measured: the postgres predicate needs $1 for MATCH and $2 for LIMIT in that order.",
     "styles": [
-      { "style": "positional-q", "index": 1, "expects": "?" },
-      { "style": "positional-q", "index": 3, "expects": "?" },
-      { "style": "positional-dollar", "index": 1, "expects": "$1" },
-      { "style": "positional-dollar", "index": 3, "expects": "$3" },
-      { "style": "mixed", "index": 1, "expects": "?" },
-      { "style": "mixed", "index": 2, "expects": "?" }
+      {
+        "style": "positional-q",
+        "index": 1,
+        "expects": "?"
+      },
+      {
+        "style": "positional-q",
+        "index": 3,
+        "expects": "?"
+      },
+      {
+        "style": "positional-dollar",
+        "index": 1,
+        "expects": "$1"
+      },
+      {
+        "style": "positional-dollar",
+        "index": 3,
+        "expects": "$3"
+      },
+      {
+        "style": "mixed",
+        "index": 1,
+        "expects": "?"
+      },
+      {
+        "style": "mixed",
+        "index": 2,
+        "expects": "?"
+      }
     ],
     "refuses": [
       {
@@ -118,13 +177,42 @@
       "input": {
         "table": "messages",
         "name": "messages_fts",
-        "cols": ["subject", "fromaddr", "body_text"],
+        "cols": [
+          "subject",
+          "fromaddr",
+          "body_text"
+        ],
         "select": "m.uid",
         "orderBy": "m.internaldate",
-        "terms": ["invoice"],
+        "terms": [
+          "invoice"
+        ],
         "limit": 50
       },
       "pg": "SELECT m.uid FROM messages m WHERE messages_fts @@ plainto_tsquery('simple', $1) ORDER BY m.internaldate DESC LIMIT $2"
     }
+  },
+  "ftsConfig": {
+    "why": "Q2 (spec/04, resolved 2026-10-23): the parity config is the DEFAULT and only a config the engine declares may be asked for by name. A non-parity config is a capability, not a hazard to prohibit — the trap beside it in the tables records that it matches more than the other engines would — but silence is not allowed either way: an undeclared config refuses.",
+    "engine": "postgres",
+    "input": {
+      "table": "messages",
+      "name": "messages_fts",
+      "cols": [
+        "subject",
+        "fromaddr",
+        "body_text"
+      ],
+      "select": "m.uid, m.folder, m.subject, m.fromaddr, m.internaldate",
+      "orderBy": "m.internaldate",
+      "terms": [
+        "invoice"
+      ],
+      "limit": 50
+    },
+    "default": "simple",
+    "alternative": "english",
+    "undeclared": "klingon",
+    "englishSql": "SELECT m.uid, m.folder, m.subject, m.fromaddr, m.internaldate FROM messages m WHERE messages_fts @@ plainto_tsquery('english', ?) ORDER BY m.internaldate DESC LIMIT ?"
   }
 }

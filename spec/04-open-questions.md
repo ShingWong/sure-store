@@ -5,33 +5,59 @@ may be built on until its answer is recorded** — and a resolved question keeps
 its record here, with what would reopen it, because a decision without its
 reasons becomes a rule nobody can revisit.
 
-## 1. Escape vocabulary, or capability-driven rendering?
+## 1. Escape vocabulary, or capability-driven rendering? — resolved 2026-10-23: **capability-driven**
 
-Both keep the schema in the owning project (so neither moves search logic into a
-host). They differ in **who holds the renderer**.
+The renderer reads the declaration; a driver opens a connection, binds parameters
+and executes. No escape syntax is invented.
 
-| | how it works | cost |
-|---|---|---|
-| **escapes** | the core emits portable SQL plus markers (`{fts …}`, `{match …}`); the driver expands them | ODBC-faithful, small driver obligation — but the escape *syntax* is ours, since ODBC's vocabulary covers functions/dates/outer joins and not full-text search |
-| **capabilities** | the core reads the declared capability set and renders everything itself; the driver only *executes* | no new syntax to invent, and the driver's job stays trivial — but the core carries the renderer for every engine |
+Three things settle it, and the third is new:
 
-Not exclusive: a declaration is what lets the core **fail closed** either way.
-Leaning capability-driven, with the declaration doubling as the refusal
-mechanism. **Unresolved.**
+- **The declaration already is the mechanism.** `impl/ts` renders every statement
+  from `contracts/engines.json`, and fixture-pinned; sure-mail's core carries a
+  generated copy of the same facts (`render-fts.mjs` → `fts.generated.ts`).
+  Neither path needs a marker for a driver to expand.
+- **Escapes buy nothing that is used.** The scenario escapes exist for is SQL
+  text that must be executed by something unable to render it. Nothing stores
+  statements: sure-mail renders at build time and the host executes finished SQL.
+- **Escapes would reverse the driver decision.** [spec/05](05-driver-slot.md)
+  created the driver slot on criterion 3 — a driver carries **no dialect facts**.
+  An escape expanded *in the driver* is exactly per-engine dialect knowledge in
+  the driver. These are not merely alternatives: choosing escapes would undo the
+  slot that was just built.
 
-## 2. The stemming default — and who may opt out of it
+The fail-closed half is unchanged, and now enforced in code: an engine absent
+from the tables throws, and so does a text-search config the engine does not
+declare (question 2).
 
-`simple` is the parity config (see [03](03-fts-semantics.md)). The question is
-whether a consumer may select `english` at all.
+**Reopens if** a host must execute SQL text it did not render — a relay or a
+service holding stored statements. Then an escape vocabulary is the only way, and
+it would need its own fixture first.
 
-- If **yes**: the divergence must be declared at the point of choice, and the
-  consumer owns the consequence that its search matches more than the other
-  engines would.
-- If **no**: postgres is pinned to `simple` and the question disappears — at the
-  cost of a real capability (stemmed search) being unavailable.
+## 2. The stemming default — resolved 2026-10-23: **yes, declared — and undeclared refuses**
 
-Leaning *yes, declared*, because forbidding a capability to preserve a parity
-nobody asked for is the wrong trade. **Unresolved.**
+`simple` stays the default; `english` is available, but only as a **named
+choice**:
+
+- the default comes from `fts.defaultConfig` — on postgres `simple`, the parity
+  config;
+- a non-parity config must be passed explicitly and must appear in
+  `fts.configs`; anything else refuses (`ftsConfig`), because rendering
+  `to_tsvector('klingon', …)` is a guess rather than a dialect;
+- the consequence is recorded beside the choice, where the consumer will read
+  it: postgres's `fts.traps` says `to_tsvector('english', …)` stems and matches
+  more than `unicode61` would.
+
+Refusing `english` outright was the alternative, and it is the mistake this
+repository has already made once: a hazard is not a capability
+([01](01-capability-model.md), `caller-issued` on postgres). Silent divergence
+was the other alternative, and it is worse — the difference has to be visible at
+the point of choice, never a default ([03](03-fts-semantics.md)). A capability
+that is named, declared, warned about and refused when undeclared is neither of
+those mistakes.
+
+Pinned by `render.json → ftsConfig`: the default is the parity config on every
+engine that declares one, `english` renders `plainto_tsquery('english', ?)`, and
+an undeclared config refuses.
 
 ## 3. Prefix search is not portable
 
@@ -140,9 +166,25 @@ consumer"*, which lets the postgres entry stand without answering the
 credential-path question globally. Both engines that can host a transaction are
 declared accordingly in `contracts/engines.json`.
 
-**Still open:** whether a `driver-managed` consumer must *also* declare that the
-connection is remote, so "server engine" stays visible at the point of choice
-rather than merely inferable from `kind: "server"`. Leaning yes.
+**Resolved 2026-10-23: no — `kind` is the declaration, and "remote" is not a contract fact.**
+
+The concern was that a server engine should stay visible at the point of choice
+rather than merely inferable. It is already visible: every engine declares
+`kind: "embedded" | "server"`, and that is the fact a consumer chooses on. The
+verification suite asserts every engine declares it, so a new entry cannot be
+silent.
+
+What a second flag would claim is something the contract cannot know. Whether a
+connection is remote is a property of the *connection*: Postgres over a unix
+socket is local, and a sqlite file on a network share is not. It is also the same
+class of fact as the database name and the user — management facts, which
+[spec/05](05-driver-slot.md) puts **above** the driver rather than inside the
+contract. A `remote: true` entry would make the tables assert a deployment detail
+and invite a consumer to trust a flag instead of its own configuration.
+
+`txOwnership` is orthogonal and stays so: a driver-managed consumer of an
+*embedded* engine is legitimate (a host owning its own connection), which is
+exactly why remoteness cannot be inferred from `txOwnership` either.
 
 **Related, and the reason the axis exists at all:** a transaction belongs to the
 *connection*, not the pool. A transaction-local query issued on a pool handle

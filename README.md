@@ -154,7 +154,9 @@ retroactively cleaned.
 **Stability bar** (proposed; the last item is the one that actually protects
 consumers):
 
-- [ ] the open questions in `spec/04` are resolved or deferred with a stated reason
+- [x] the open questions in `spec/04` are resolved or deferred with a stated reason
+      (Q1 capability-driven, Q2 declared stemming, Q4 no schema DSL, Q5 `kind` not
+      `remote`; Q3 and Q6 deferred/non-priority with reasons)
 - [x] the behavioural suites run green against **all three** engines — no engine
       permanently skipped for want of a driver or a server in CI (the `behaviour`
       job in CI: sqlite, Turso and a Postgres service, with `--require-all`)
