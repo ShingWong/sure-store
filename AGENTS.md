@@ -93,6 +93,12 @@ npm stage approve <stage-id>          # requires 2FA
 npm view @shing.wong/sure-store       # version + dist-tag afterwards
 ```
 
+After the first staged approval, `latest` is npm's `0.0.0-stage` placeholder
+("Temporary package placeholder for staged publishing") and the real version sits
+on the tag you chose — `next` today. Consumers must install `@next` until `latest`
+is deliberately promoted; a bare `npm i` gets the placeholder, which is npm's
+guard against an unapproved first release, not a fault in the package.
+
 Auth is a granular access token with publish rights on `@shing.wong`; classic
 tokens that bypass 2FA are being restricted. Note the failure order: npm
 authenticates *before* it resolves the package name, so an invalid token can look
