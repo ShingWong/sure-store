@@ -10,9 +10,26 @@ projects that each own their own schema.
 | [sure-factor](https://github.com/ShingWong/sure-factor) | TypeScript | introspects an app schema → UI |
 | memeng (`positronic-engram`) | Python | brain: `episode`, `object`, `stream` |
 | pai-core (`positronic-agent-interface`) | TypeScript | brain store (`BrainDb`) |
+| [sun-portal](https://github.com/ShingWong/sun-portal) | TypeScript | premium-finance portal (`loanapps`, `agents`, …); also the instigator of `components/` |
 
 **What is shared is not the schema.** Each project keeps its own. What is shared
 is the expensive part: *what it costs to run any schema on different engines.*
+…And now also the reusable UI controls (`components/`) — the same logic in the
+UI dimension: generic controls belong to the stack, product domains stay home.
+
+## `components/` — the reusable UI component store
+
+From 2026-10-23, this repo also hosts the shared **UI component catalog**:
+generic, reusable component definitions (sure-factor catalog YAML form,
+see [`components/README.md`](components/README.md)) contributed by consuming
+products, seeded by `sun-portal`'s rule: *"check the built-in catalog, then
+extend, then contribute — never hand-roll a private copy."*
+
+License for these components is **MIT** (inherited). They are generic —
+field-agnostic forms, tables, menus, headers — and carry nothing proprietary;
+each product's domain logic (rates engines, pricing flows, business wording)
+stays in the product repo under its own license. This is the same
+"generic parts are open" line the storage contract already draws.
 
 ## Why this exists
 
