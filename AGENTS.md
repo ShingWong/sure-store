@@ -79,3 +79,21 @@ reproducible against a live engine, and the probe that proves it belongs in
 The obligation is: read `contracts/engines.json`, satisfy
 `verification/fixtures/`, ship a runner that proves it. See
 `docs/guide.md` § Porting.
+
+## Publishing
+
+Staged, not direct: `npm stage publish` defers 2FA to an explicit approval step,
+which suits a repository that stays private until the contract is stable.
+
+```bash
+npm whoami                            # must succeed BEFORE anything else
+npm stage publish --tag next --access public
+npm stage list                        # copy the stage id
+npm stage approve <stage-id>          # requires 2FA
+npm view @shing.wong/sure-store       # version + dist-tag afterwards
+```
+
+Auth is a granular access token with publish rights on `@shing.wong`; classic
+tokens that bypass 2FA are being restricted. Note the failure order: npm
+authenticates *before* it resolves the package name, so an invalid token can look
+like a missing package if you only read the last line of the error.
