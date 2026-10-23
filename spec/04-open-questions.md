@@ -99,12 +99,20 @@ which lands back on the cost below.
 
 ### The candidate model is thinner than "SchemaInfo" sounds
 
-Read, not assumed (sure-factor @ master, 2026-10-23): `ColumnInfo` carries name,
-data type, nullability, `maxLength`, default, `isPrimaryKey` and a per-column
-`foreignKey`. There is no composite primary key, no index, no unique constraint,
-no check, no collation. Adopting it would not be adopting a schema model; it
-would be extending a *form-generation* model into a schema language, and then
-calling the extension sure-factor's.
+Read, not assumed (sure-factor @ 0.5.2, 2026-10-23): `ColumnInfo` carries name,
+data type, nullability, `maxLength`, default, `isPrimaryKey`, a per-column
+`foreignKey`, and — since 0.5.1 — a free-text `comment` and `enumValues` parsed
+from `CHECK (column IN (…))`. There is still no composite primary key, no index,
+no unique constraint, no general check model (an `IN` list is an enum a form can
+render, not a constraint the engine enforces), and no collation. Adopting it
+would not be adopting a schema model; it would be extending a *form-generation*
+model into a schema language, and then calling the extension sure-factor's.
+
+The two additions are the reason the answer has not moved: they are facts a
+**form** needs — a picker and a help line — not facts the engine enforces. That
+is the boundary this contract draws, and it is worth naming, because the
+alternative reading ("the model is growing, so it may become a schema model") is
+the one that would quietly reverse the decision.
 
 The cost is unchanged and large: sure-mail's schema is one AssemblyScript string
 constant, deliberately sqlite-shaped (rowid identity, FTS5 triggers), and
