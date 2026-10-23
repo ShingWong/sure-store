@@ -40,6 +40,20 @@ for (let i = 0; i < process.argv.length; i++) {
 
 const contract = JSON.parse(readFileSync(join(ROOT, "contracts", "engines.json"), "utf8"));
 
+// A `--driver` naming a binding the contract does not declare would never be
+// used: the run would fall back to the built-in adapter and report a pass. That
+// is the silent fallback this suite exists to refuse, one layer up.
+for (const name of driverPaths.keys()) {
+  const declared = contract.bindings?.[name];
+  if (!declared || typeof declared === "string") {
+    console.error(
+      `--driver names binding "${name}", which the contract does not declare ` +
+        `(declared: ${Object.keys(contract.bindings ?? {}).filter((k) => typeof contract.bindings[k] !== "string").join(", ")})`,
+    );
+    process.exit(2);
+  }
+}
+
 const returnsRows = (sql) => /^\s*(select|with|pragma)\b/i.test(sql);
 
 // ---------------------------------------------------------------------------
