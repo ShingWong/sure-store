@@ -103,3 +103,9 @@ Auth is a granular access token with publish rights on `@shing.wong`; classic
 tokens that bypass 2FA are being restricted. Note the failure order: npm
 authenticates *before* it resolves the package name, so an invalid token can look
 like a missing package if you only read the last line of the error.
+
+**Use a client that has the command.** `stage` is not in npm 10: on this box
+`/usr/bin/npm` is 10.9.9 and answers `Unknown command: "stage"`. Run it through
+the latest instead — `npx -y npm@latest stage publish …` — or the staging step
+fails before it reaches the registry, which reads like an auth problem and is not
+one. Staging 0.1.0 and 0.2.0 both needed this.
