@@ -32,11 +32,12 @@
     "verify:behaviour": "node --experimental-strip-types verification/run-behaviour.mjs",
     "verify:resolver": "node --experimental-strip-types verification/run-behaviour.mjs --self-check",
     "test": "node --test test/*.test.mjs",
-    "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify && npm run verify:resolver",
+    "ci": "npm run security:check && npm run check:contracts && npm run check:fixtures && npm test && npm run verify && npm run verify:resolver",
     "build": "tsc -p tsconfig.build.json && tsc -p drivers/node-sqlite/tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "prepack": "npm run build",
-    "verify:behaviour:all": "node --experimental-strip-types verification/run-behaviour.mjs --require-all"
+    "verify:behaviour:all": "node --experimental-strip-types verification/run-behaviour.mjs --require-all",
+    "check:fixtures": "node verification/validate-fixtures.mjs"
   },
   "keywords": [
     "sqlite",

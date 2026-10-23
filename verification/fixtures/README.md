@@ -9,6 +9,33 @@ satisfies them, and not before.
 - `tx.json` and `stmt-shape.json` are **behavioural** and run against real
   engines (`verification/run-behaviour.mjs`).
 
+## Format version — frozen at 1
+
+Every fixture declares `formatVersion` and the `specVersion` it was written
+against. **A runner must refuse a `formatVersion` it does not implement**; that
+is the whole reason to declare one, and `verification/validate-fixtures.mjs`
+refuses anything but `1`.
+
+The rule for changing the format:
+
+- **additive within 1** — a new optional field, or a new top-level section, that
+  a v1 runner can ignore without misreading anything;
+- **a version bump for anything a v1 runner would misread** — renaming a key,
+  changing a default, or narrowing a meaning;
+- the top-level key list and the case shape are **enforced**, so "additive" is
+  checked rather than remembered: an unknown top-level key fails the gate, and
+  so does a case whose `requires.path`, `{token}` or `check.fields` could never
+  do what it says.
+
+The second bullet is not etiquette. Three of these rules exist because the
+opposite happened: `{types.timestamptz}` (flat; the real path is
+`types.map.timestamptz`) survived into SQL as literal text, a typo in
+`requires.path` skipped silently, and `check.fields` on an engine-scoped case
+asserted a driver envelope the engine does not have.
+
+A third-party runner pins `formatVersion: 1` and treats this file as the format
+it implements.
+
 ## A behavioural case
 
 ```json

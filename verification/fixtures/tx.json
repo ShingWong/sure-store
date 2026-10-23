@@ -1,4 +1,5 @@
 {
+  "formatVersion": 1,
   "specVersion": "0.2.0",
   "id": "tx-atomic-audit-write",
   "from": "FR-1 (mgmt-pg) — offered by the consumer that found it the hard way",
@@ -20,8 +21,16 @@
         "COMMIT",
         "SELECT (SELECT COUNT(*) FROM item) AS items, (SELECT COUNT(*) FROM audit) AS audits"
       ],
-      "check": { "first": { "items": 1, "audits": 1 } },
-      "assert": ["both rows are present after COMMIT"]
+      "check": {
+        "first": {
+          "items": 1,
+          "audits": 1
+        }
+      },
+      "assert": [
+        "both rows are present after COMMIT"
+      ],
+      "why": "the plain case the other two are measured against: one unit, two tables, COMMIT. If this fails the connection is not running the statements the fixture thinks it is."
     },
     {
       "id": "abort-both",
@@ -32,8 +41,16 @@
         "ROLLBACK",
         "SELECT (SELECT COUNT(*) FROM item) AS items, (SELECT COUNT(*) FROM audit) AS audits"
       ],
-      "check": { "first": { "items": 0, "audits": 0 } },
-      "assert": ["neither row survives ROLLBACK"]
+      "check": {
+        "first": {
+          "items": 0,
+          "audits": 0
+        }
+      },
+      "assert": [
+        "neither row survives ROLLBACK"
+      ],
+      "why": "the direction that catches a driver treating ROLLBACK as a no-op or as COMMIT: neither write may survive."
     },
     {
       "id": "audit-failure-rolls-back-the-write",
@@ -41,16 +58,28 @@
       "steps": [
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
-        { "sql": "INSERT INTO audit (item_id, note) VALUES (1, NULL)", "expects": "reject", "errorMatches": "null" },
+        {
+          "sql": "INSERT INTO audit (item_id, note) VALUES (1, NULL)",
+          "expects": "reject",
+          "errorMatches": "null"
+        },
         "ROLLBACK",
         "SELECT (SELECT COUNT(*) FROM item) AS items"
       ],
-      "check": { "first": { "items": 0 } },
-      "assert": ["the NOT NULL violation is reported, and the item write is gone"]
+      "check": {
+        "first": {
+          "items": 0
+        }
+      },
+      "assert": [
+        "the NOT NULL violation is reported, and the item write is gone"
+      ]
     },
     {
       "id": "savepoint-nesting",
-      "requires": { "path": "tx.savepoint" },
+      "requires": {
+        "path": "tx.savepoint"
+      },
       "steps": [
         "BEGIN",
         "INSERT INTO item (id, name) VALUES (1, 'a')",
@@ -61,24 +90,46 @@
         "COMMIT",
         "SELECT COUNT(*) AS items FROM item"
       ],
-      "check": { "first": { "items": 1 } },
-      "assert": ["the outer write survives; the inner one does not"]
+      "check": {
+        "first": {
+          "items": 1
+        }
+      },
+      "assert": [
+        "the outer write survives; the inner one does not"
+      ],
+      "why": "savepoints are declared per engine; the case pins that a rollback to the savepoint discards only the inner write, leaving the outer one to COMMIT."
     },
     {
       "id": "forUpdate-runs-inside-the-transaction",
-      "requires": { "path": "tx.forUpdate" },
-      "steps": ["BEGIN", "SELECT id FROM item WHERE id = 1 FOR UPDATE", "COMMIT"],
+      "requires": {
+        "path": "tx.forUpdate"
+      },
+      "steps": [
+        "BEGIN",
+        "SELECT id FROM item WHERE id = 1 FOR UPDATE",
+        "COMMIT"
+      ],
       "assert": [
         "the lock is taken within the transaction — a pool-handle statement here would run autocommit and take no lock"
-      ]
+      ],
+      "why": "a lock is taken only on the connection that owns the transaction — the failure txOwnership exists to make visible, and one that arrives as a missing lock rather than as an error."
     },
     {
       "id": "isolation-is-settable",
-      "requires": { "path": "tx.isolationLevels", "nonEmpty": true },
-      "steps": ["BEGIN", "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", "COMMIT"],
+      "requires": {
+        "path": "tx.isolationLevels",
+        "nonEmpty": true
+      },
+      "steps": [
+        "BEGIN",
+        "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+        "COMMIT"
+      ],
       "assert": [
         "the level is accepted, or the engine declares no isolationLevels and the case is SKIPPED"
-      ]
+      ],
+      "why": "isolation is declared per engine, so a consumer may set it; an engine with no declared levels gates the case out rather than pretending."
     }
   ],
   "runnerObligation": "Run each case on a FRESH database. Assert the `requires` capability against contracts/engines.json FIRST: a case whose capability the engine does not declare is SKIPPED, never failed. A skip must be reported as a skip, because 'this engine cannot express it' and 'this engine failed it' are different facts and only one of them is a defect."

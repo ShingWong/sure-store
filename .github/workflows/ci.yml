@@ -54,6 +54,9 @@ jobs:
       - name: Contracts and fixtures are valid JSON
         run: npm run check:contracts
 
+      - name: Fixture format — envelope, case shape, every path resolves
+        run: npm run check:fixtures
+
       - name: Contract verification — fixtures against the reference renderer
         run: npm run verify
 

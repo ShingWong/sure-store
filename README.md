@@ -160,8 +160,9 @@ consumers):
 - [x] the behavioural suites run green against **all three** engines — no engine
       permanently skipped for want of a driver or a server in CI (the `behaviour`
       job in CI: sqlite, Turso and a Postgres service, with `--require-all`)
-- [ ] the fixture format is final (it is the contract, so changing it later
-      breaks every implementation at once)
+- [x] the fixture format is final — frozen at `formatVersion: 1`, with the
+      extension rule written down and enforced (`verification/validate-fixtures.mjs`):
+      additive within 1, a version bump for anything a v1 runner would misread
 - [ ] at least one consumer depends on the published package and its own gates
       pass against it — a contract nobody consumes is a hypothesis
 

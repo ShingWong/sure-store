@@ -1,6 +1,8 @@
 {
+  "formatVersion": 1,
+  "specVersion": "0.2.0",
   "id": "introspect",
-  "why": "Introspection is not one query shape. sqlite is per-table because PRAGMA takes no argument, so the table name is inlined and MUST be quoted; Postgres is set-based with a bound schema. The rows then normalize into one record, and the rule that makes the engines agree \u2014 nullable = rawNullable AND NOT isPrimaryKey \u2014 is pinned here with the rows that originally disagreed.",
+  "why": "Introspection is not one query shape. sqlite is per-table because PRAGMA takes no argument, so the table name is inlined and MUST be quoted; Postgres is set-based with a bound schema. The rows then normalize into one record, and the rule that makes the engines agree — nullable = rawNullable AND NOT isPrimaryKey — is pinned here with the rows that originally disagreed.",
   "render": {
     "cases": [
       {
@@ -30,7 +32,7 @@
       {
         "engine": "turso",
         "section": "columns",
-        "why": "introspection is not declared for this engine \u2014 absent is not empty"
+        "why": "introspection is not declared for this engine — absent is not empty"
       },
       {
         "engine": "sqlite",
