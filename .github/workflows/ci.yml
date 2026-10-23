@@ -82,3 +82,44 @@ jobs:
 
       - name: Tarball contains the contract beside the code
         run: npm pack --dry-run
+
+  behaviour:
+    name: behavioural fixtures on all three engines
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sure_store
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # The only behavioural run that installs: sqlite needs nothing, but Turso
+      # and Postgres need real drivers, and a fixture suite that skips them is a
+      # suite that has not been run.
+      - name: Drivers
+        run: npm ci
+
+      - name: Fixtures, every engine — a missing driver is a FAILURE here
+        run: npm run verify:behaviour:all
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: sure_store

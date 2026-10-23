@@ -91,11 +91,78 @@ async function turso() {
 }
 
 /** The adapter for an engine, or null when it cannot run here. */
+/**
+ * Postgres via the `pg` package.
+ *
+ * Absent module -> null (a SKIP: this runner installs nothing). Present but
+ * unreachable -> THROW: a configured driver that cannot connect is a defect, and
+ * turning that into a skip would hide a broken CI service behind a green report.
+ *
+ * `pg` is promise-based and earlier versions of this runner were synchronous; the
+ * runner now awaits, so an async driver is a first-class adapter rather than an
+ * excuse to shell out to psql and interpolate parameters by hand.
+ */
+async function postgres() {
+  let mod;
+  try {
+    mod = await import("pg");
+  } catch {
+    adapterNotes.set("postgres", "no pg driver installed");
+    return null;
+  }
+  const { Client } = mod.default ?? mod;
+  const config = {
+    host: process.env.PGHOST ?? "127.0.0.1",
+    port: Number(process.env.PGPORT ?? "5432"),
+    database: process.env.PGDATABASE ?? "postgres",
+    user: process.env.PGUSER ?? undefined,
+    password: process.env.PGPASSWORD ?? undefined,
+  };
+
+  const probe = new Client(config);
+  try {
+    await probe.connect();
+    await probe.end();
+  } catch (err) {
+    // "Cannot run here" is a SKIP with a reason; "ran and was wrong" is a failure.
+    // CI turns this skip back into an error with --require-all, so a broken
+    // service cannot hide behind it.
+    adapterNotes.set("postgres", `postgres unreachable (${String(err && err.message).split("\n")[0]})`);
+    return null;
+  }
+
+  return {
+    label: "pg",
+    async open() {
+      const client = new Client(config);
+      await client.connect();
+      // One schema per case: sqlite and turso each get a fresh :memory: database,
+      // so Postgres needs an equivalent or a case's tables leak into the next one
+      // (measured: "relation t already exists").
+      await client.query("DROP SCHEMA IF EXISTS sure_store_case CASCADE");
+      await client.query("CREATE SCHEMA sure_store_case");
+      await client.query("SET search_path TO sure_store_case");
+      return {
+        async exec(sql, params = []) {
+          const res = params.length > 0 ? await client.query(sql, params) : await client.query(sql);
+          const out = Array.isArray(res) ? res[res.length - 1] : res;
+          return { rows: out.rows ?? null, info: { rowCount: out.rowCount, command: out.command } };
+        },
+        async close() {
+          await client.end();
+        },
+      };
+    },
+  };
+}
+
+/** Why an adapter was not available, so a skip states a reason instead of a shrug. */
+const adapterNotes = new Map();
+
 async function adapterFor(engine) {
   if (engine === "sqlite") return nodeSqlite();
   if (engine === "turso") return turso();
-  // postgres: this runner is dependency-free, so it has no driver to reach a
-  // server with. The live probes under verification/live/ cover it.
+  if (engine === "postgres") return postgres();
   return null;
 }
 
@@ -103,7 +170,8 @@ async function adapterFor(engine) {
 async function adapterForBinding(bindingName) {
   if (bindingName === "node:sqlite") return nodeSqlite();
   if (bindingName === "@tursodatabase/database/compat") return turso();
-  return null; // pg: no dependency-free driver
+  if (bindingName === "pg") return postgres();
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +304,7 @@ if (process.argv.includes("--self-check")) {
 
 const fail = (message) => ({ status: "FAIL", message });
 
-function checkResult(check, last) {
+function checkResult(check, last, scope) {
   if (!check) return null;
   if ("rows" in check) {
     const n = (last.rows ?? []).length;
@@ -246,21 +314,30 @@ function checkResult(check, last) {
     const row = (last.rows ?? [])[0];
     if (!row) return fail("expected a row for `first`, got none");
     for (const [col, expected] of Object.entries(check.first)) {
-      if (row[col] !== expected) {
-        return fail(`column ${col}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(row[col])}`);
+      // Compare BY VALUE, not by JS type. Engines legitimately differ on numeric
+      // representation -- Postgres COUNT(*) is int8 and the pg driver returns it
+      // as a string to avoid precision loss -- and the fixture asserts the value,
+      // not the driver's choice of container.
+      const actual = row[col];
+      if (actual !== expected && String(actual) !== String(expected)) {
+        return fail(`column ${col}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
       }
     }
   }
   if (check.fields) {
     const keys = Object.keys(last.info ?? {});
-    for (const field of check.fields) {
+    for (const raw of check.fields) {
+      const field = substitute(String(raw), scope ?? {}, null);
+      // A declared-but-null fact (pg has no insertIdField) is the ABSENCE of an
+      // expectation, not an expectation of a field called "null".
+      if (field === "null" || field === "undefined") continue;
       if (!keys.includes(field)) return fail(`driver result lacks "${field}" (has: ${keys.join(", ") || "none"})`);
     }
   }
   return null;
 }
 
-function runCase(conn, caseDef, scope, paramsStyle) {
+async function runCase(conn, caseDef, scope, paramsStyle) {
   const steps = caseDef.steps.map((s) => (typeof s === "string" ? { sql: s } : s));
   const caseRejects = (caseDef.expects ?? "ok") === "reject";
   const single = steps.length === 1;
@@ -276,7 +353,7 @@ function runCase(conn, caseDef, scope, paramsStyle) {
     // `binds` applies to the final step — the one whose result is checked.
     const params = i === steps.length - 1 ? caseDef.binds ?? [] : [];
     try {
-      last = conn.exec(sql, params);
+      last = await conn.exec(sql, params);
       if (expectsReject) return fail(`step ${i + 1} should have been refused but succeeded: ${sql}`);
     } catch (err) {
       const message = String(err && err.message).split("\n")[0];
@@ -291,12 +368,12 @@ function runCase(conn, caseDef, scope, paramsStyle) {
   }
 
   if (caseRejects && rejections === 0) return fail("case expects a refusal; none occurred");
-  return checkResult(caseDef.check, last) ?? { status: "PASS" };
+  return checkResult(caseDef.check, last, scope) ?? { status: "PASS" };
 }
 
 /** Set up the fixture's base schema on a fresh connection. */
-function seed(conn, fixture, scope, paramsStyle) {
-  for (const sql of fixture.schema ?? []) conn.exec(substitute(sql, scope, paramsStyle));
+async function seed(conn, fixture, scope, paramsStyle) {
+  for (const sql of fixture.schema ?? []) await conn.exec(substitute(sql, scope, paramsStyle));
 }
 
 // ---------------------------------------------------------------------------
@@ -309,7 +386,7 @@ const failures = [];
 const skips = [];
 
 /** Run one case once, on a fresh connection. */
-function attempt(file, caseDef, scope, adapter, paramsStyle, label) {
+async function attempt(file, caseDef, scope, adapter, paramsStyle, label) {
   let gate;
   try {
     gate = satisfies(caseDef.requires, scope);
@@ -332,22 +409,23 @@ function attempt(file, caseDef, scope, adapter, paramsStyle, label) {
   }
   if (!adapter) {
     counts.skip += 1;
-    skips.push(`${file} ${caseDef.id} [${label}] — no dependency-free driver here`);
-    if (VERBOSE) console.log(`  SKIP ${caseDef.id} [${label}] — no driver`);
+    const why = adapterNotes.get(label) ?? "no driver installed";
+    skips.push(`${file} ${caseDef.id} [${label}] — ${why}`);
+    if (VERBOSE) console.log(`  SKIP ${caseDef.id} [${label}] — ${why}`);
     return;
   }
   const fixture = FIXTURES_CACHE[file];
-  const conn = adapter.open();
+  const conn = await adapter.open();
   let result;
   try {
-    seed(conn, fixture, scope, paramsStyle);
-    result = runCase(conn, caseDef, scope, paramsStyle);
+    await seed(conn, fixture, scope, paramsStyle);
+    result = await runCase(conn, caseDef, scope, paramsStyle);
   } catch (err) {
     // A failure while seeding is a fixture or contract defect, not a crash of
     // the runner: report it with the case so it is actionable.
     result = fail(`setup threw: ${String(err && err.message).split("\n")[0]}`);
   } finally {
-    conn.close();
+    await conn.close();
   }
   if (result.status === "PASS") counts.pass += 1;
   else {
@@ -374,7 +452,7 @@ for (const file of FIXTURES) {
     const adapter = await adapterFor(engine);
     for (const caseDef of fixture.cases) {
       if ((caseDef.scope ?? "engine") !== "engine") continue;
-      attempt(file, caseDef, entry, adapter, null, engine);
+      await attempt(file, caseDef, entry, adapter, null, engine);
     }
   }
 
@@ -388,8 +466,20 @@ for (const file of FIXTURES) {
     const adapter = await adapterForBinding(name);
     for (const caseDef of fixture.cases) {
       if ((caseDef.scope ?? "engine") !== "binding") continue;
-      attempt(file, caseDef, scope, adapter, binding.params, name);
+      await attempt(file, caseDef, scope, adapter, binding.params, name);
     }
+  }
+}
+
+if (process.argv.includes("--require-all")) {
+  // "No engine permanently skipped for want of a driver" — asserted, not assumed.
+  const driverSkips = skips.filter((s) =>
+    /driver installed|unreachable|no dependency-free driver/.test(s),
+  );
+  if (driverSkips.length > 0) {
+    for (const s of driverSkips.slice(0, 5)) console.log(`  MISSING DRIVER ${s}`);
+    console.log(`\n--require-all: ${driverSkips.length} case(s) skipped for a missing driver`);
+    process.exit(1);
   }
 }
 

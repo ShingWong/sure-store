@@ -5,10 +5,10 @@
   "appliesTo": "every engine whose `tx` block is present",
   "invariant": "the audit row and the write that caused it commit or roll back together, or neither happened",
   "why": "A transaction belongs to the CONNECTION, not the pool. A transaction-local query issued on a pool handle runs autocommit while the rest of the transaction runs inside it. That surfaced in practice as a MISSING FOR UPDATE LOCK — not as leaked SQL — and was misread once before it was caught. A dialect-level suite is the only place this can be pinned once for every engine.",
-  "identity": "Every step inserts ids EXPLICITLY, so this fixture is identity-agnostic and needs no `identity.autoAssigns`. Do not assume ids appear for free: `id INTEGER PRIMARY KEY` parses on Postgres and does NOT auto-assign (spec/02 Trap 2), so a porting language that omits ids will fail here for the wrong reason.",
+  "identity": "Every step inserts ids EXPLICITLY, so this fixture is identity-agnostic and needs no `identity.autoAssigns`. Do not assume ids appear for free: `id {identity.ddl}` parses on Postgres and does NOT auto-assign (spec/02 Trap 2), so a porting language that omits ids will fail here for the wrong reason.",
   "schema": [
-    "CREATE TABLE item (id INTEGER PRIMARY KEY, name TEXT NOT NULL)",
-    "CREATE TABLE audit (id INTEGER PRIMARY KEY, item_id INTEGER, note TEXT NOT NULL)"
+    "CREATE TABLE item (id {identity.ddl}, name TEXT NOT NULL)",
+    "CREATE TABLE audit (id {identity.ddl}, item_id INTEGER, note TEXT NOT NULL)"
   ],
   "cases": [
     {

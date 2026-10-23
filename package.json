@@ -32,7 +32,8 @@
     "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify && npm run verify:resolver",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "verify:behaviour:all": "node --experimental-strip-types verification/run-behaviour.mjs --require-all"
   },
   "keywords": [
     "sqlite",
@@ -50,7 +51,9 @@
     "spec"
   ],
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/node": "^22.0.0"
+    "@tursodatabase/database": "^0.8.3",
+    "@types/node": "^22.0.0",
+    "pg": "^8.23.1",
+    "typescript": "^5.7.0"
   }
 }

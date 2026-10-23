@@ -138,8 +138,9 @@ retroactively cleaned.
 consumers):
 
 - [ ] the open questions in `spec/04` are resolved or deferred with a stated reason
-- [ ] the behavioural suites run green against **all three** engines — no engine
-      permanently skipped for want of a driver or a server in CI
+- [x] the behavioural suites run green against **all three** engines — no engine
+      permanently skipped for want of a driver or a server in CI (the `behaviour`
+      job in CI: sqlite, Turso and a Postgres service, with `--require-all`)
 - [ ] the fixture format is final (it is the contract, so changing it later
       breaks every implementation at once)
 - [ ] at least one consumer depends on the published package and its own gates
