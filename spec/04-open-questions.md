@@ -1,7 +1,9 @@
 # 04 — Open questions
 
-Undecided. Each one names the choice, the options, and what it costs. Nothing
-here is settled; do not build on an answer that has not been recorded.
+Each question names the choice, the options, and what it costs. **Nothing here
+may be built on until its answer is recorded** — and a resolved question keeps
+its record here, with what would reopen it, because a decision without its
+reasons becomes a rule nobody can revisit.
 
 ## 1. Escape vocabulary, or capability-driven rendering?
 
@@ -41,20 +43,82 @@ Leaning the latter — an unused capability is speculative, and this repo's whol
 discipline is to record what was measured, not what might be wanted.
 **Unresolved, deliberately deferred.**
 
-## 4. Is there a shared schema DSL?
+## 4. Is there a shared schema DSL? — resolved 2026-10-23: **no**, with a trigger
 
-Today only the **dialect knowledge** is shared; each project owns its schema.
-The bigger prize is one schema definition that renders DDL for every engine —
-and [sure-factor](https://github.com/ShingWong/sure-factor) already has the
-candidate: an engine-neutral `SchemaInfo` / `TableInfo` / `ColumnInfo` model,
-plus DDL-text introspection with no live connection.
+**Answer: the contract keeps carrying dialect facts; no schema DSL enters it.**
+Each consumer composes its own schema text from those facts. The question
+reopens on a named trigger, not on interest.
 
-Cost: sure-mail's schema is an AssemblyScript string constant and memeng's is
-Python. Adopting a shared DSL means both rewrite how they declare their schema —
-a far larger change than sharing tables.
+### The shortcut was measured and refused
 
-**Stage 2, not 0.1.0.** Worth doing only once the dialect tables have proven
-themselves in use.
+The attractive middle is *"the introspection record is already neutral and
+fixture-pinned, so render DDL from it"*. `verification/live/ddl-from-records.mjs`
+creates two tables whose **column records are identical** and whose DDL is not:
+
+```
+CREATE TABLE plain (id INTEGER PRIMARY KEY, email TEXT NOT NULL, price NUMERIC DEFAULT 0)
+CREATE TABLE rich  (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE,
+                    price NUMERIC DEFAULT 0 CHECK (price >= 0))
+CREATE INDEX rich_lower_email ON rich (lower(email))
+
+columns: IDENTICAL — UNIQUE and CHECK leave no trace
+record sections: tables, columns, primaryKeys, foreignKeys
+```
+
+`UNIQUE`, `CHECK` and every index live outside the record model, so a renderer
+fed a record drops them **without noticing**. That is the failure this repository
+exists to prevent: a plausible rendering that is quietly lossy. Making the record
+lossless means extending it into a declaration format — a DSL by another name —
+which lands back on the cost below.
+
+### The candidate model is thinner than "SchemaInfo" sounds
+
+Read, not assumed (sure-factor @ master, 2026-10-23): `ColumnInfo` carries name,
+data type, nullability, `maxLength`, default, `isPrimaryKey` and a per-column
+`foreignKey`. There is no composite primary key, no index, no unique constraint,
+no check, no collation. Adopting it would not be adopting a schema model; it
+would be extending a *form-generation* model into a schema language, and then
+calling the extension sure-factor's.
+
+The cost is unchanged and large: sure-mail's schema is one AssemblyScript string
+constant, deliberately sqlite-shaped (rowid identity, FTS5 triggers), and
+memeng's is Python. Both would rewrite how they declare their schema.
+
+### The prize is not currently being lost
+
+The motivation was "one schema definition that renders DDL for every engine".
+Measured, nobody has that need:
+
+- sure-mail's `schema.ts` is 146 lines with **no engine branch** — sqlite only —
+  and five hand-written `CREATE INDEX` statements. The core has **zero**
+  postgres references and consumes no `identity.ddl` / `types.map` fragment; the
+  only contract-derived DDL it ships is the FTS block.
+- sure-factor consumes the contract for introspection and types, not for DDL.
+- memeng declares its own schema in Python.
+
+So multi-engine schema rendering is a hypothetical, and the fragments that do
+exist (`identity.ddl`, `types.map`, `identifierQuote`) are question 1's escape
+approach applied to DDL — available to any consumer, used by none yet.
+
+### What reopens it
+
+Either, arriving as a **fixture** rather than a wish:
+
+1. **two consumers need one schema rendered for two engines** — the first real
+   multi-engine schema, at which point the DSL has a consumer and a fixture; or
+2. **a consumer needs its schema validated against the tables at build time**
+   and cannot keep its own renderer — the fail-closed argument, which is about
+   validity rather than about sharing text.
+
+### Consequence for stage 2
+
+5.2 ("per-engine DDL rendering from the tables") is re-scoped by this decision;
+it is not a DSL task. The measured gap is narrower: the tables declare
+`indexKinds` (which index kinds each engine can materialise — `btree`,
+`partial`, `expression`, then `fts` or `gin`) but no **index or constraint DDL**, while sure-mail
+hand-writes five `CREATE INDEX` statements. If a second dialect ever needs them,
+they become contract entries with fixtures, the same shape as every other fact
+here.
 
 ## 5. Postgres is a *server* — but the axis is narrower than yes/no
 

@@ -116,7 +116,8 @@ to the built-in adapter fails rather than passing as conformance.
 - no pool and no `BEGIN` policy — `txOwnership` stays an axis of the caller;
 - no normalised result envelope — `changes` / `lastInsertRowid` are reported as
   bound, which is what binding-scoped fixtures exist to assert;
-- no migration or DDL — that is stage 2, still gated on Q4.
+- no migration or DDL — that is stage 2, whose scope Q4 settled (spec/04 §4):
+  contract fragments, not a schema DSL;
 
 ### First consumer
 
