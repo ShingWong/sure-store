@@ -141,11 +141,11 @@ real engines (sqlite, Turso, Postgres) so the tables cannot drift from reality.
 
 ## Status
 
-**0.1.0 — the contract is measured; one reference implementation exists.
+**0.2.0 — the contract is measured; one reference implementation and one driver exist.
 Private until it is stable.**
 
 The repository is **private on purpose, not as a default**: the tables are still
-moving (0.1.0, unreleased), and a public contract that changes weekly teaches
+moving (0.2.0, unreleased), and a public contract that changes weekly teaches
 consumers to pin a snapshot and stop reading it. It becomes public when the
 stability bar below is met — at which point the security gate has already been
 running since the first commit, because history is permanent and cannot be

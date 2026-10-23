@@ -1,5 +1,5 @@
 {
-  "specVersion": "0.1.0",
+  "specVersion": "0.2.0",
   "note": "Language-neutral expectations. A renderer in ANY language is correct when it satisfies these, and not before. Inputs are the ones the core actually produces: terms already split on whitespace with quotes stripped.",
   "matchParam": [
     {

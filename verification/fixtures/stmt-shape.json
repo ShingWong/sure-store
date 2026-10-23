@@ -1,5 +1,5 @@
 {
-  "specVersion": "0.1.0",
+  "specVersion": "0.2.0",
   "id": "stmt-shape",
   "from": "FR-2 (mgmt-pg), as contributed; case format fixed and checks added before landing",
   "appliesTo": "every engine entry whose clock/types blocks are present, plus every entry in bindings",

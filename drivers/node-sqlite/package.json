@@ -26,10 +26,13 @@
     "node": ">=22.5.0"
   },
   "dependencies": {
-    "@shing.wong/sure-store": "^0.1.0"
+    "@shing.wong/sure-store": "^0.2.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@shing.wong/sure-store": "file:../.."
   }
 }

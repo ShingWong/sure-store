@@ -64,3 +64,10 @@ adapter logic, because that logic is a verification rule ("single statements go
 through `run()` so the envelope is observable"), not a driver fact. Nothing here
 is imported by sure-store: the dependency is one-directional, consumer → driver
 → contract.
+
+In this repository the contract resolves to the local checkout through a
+`file:../..` **dev** dependency: npm has no `workspace:` protocol, and the root
+package is not a linkable workspace package, so a plain `^x.y.z` range would
+fetch the published copy while you are changing the local one. The runtime
+`dependencies` range is what a consumer resolves; the dev dependency only decides
+what this checkout builds against.

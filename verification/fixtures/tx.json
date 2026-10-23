@@ -1,5 +1,5 @@
 {
-  "specVersion": "0.1.0",
+  "specVersion": "0.2.0",
   "id": "tx-atomic-audit-write",
   "from": "FR-1 (mgmt-pg) — offered by the consumer that found it the hard way",
   "appliesTo": "every engine whose `tx` block is present",
