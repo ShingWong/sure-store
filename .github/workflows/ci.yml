@@ -83,6 +83,30 @@ jobs:
       - name: Tarball contains the contract beside the code
         run: npm pack --dry-run
 
+  driver:
+    name: node:sqlite driver — fixtures through the driver
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # A driver necessarily depends on the package it drives, so this job links
+      # the workspace and builds. The gate job above still proves the contract
+      # with nothing installed — this is a consumer, and consumers build.
+      - name: Workspace + compiler
+        run: npm ci
+
+      - name: Compile the contract and the driver
+        run: npm run build
+
+      - name: Fixtures must pass THROUGH the driver, not the built-in adapter
+        run: npm test --workspace @shing.wong/sure-store-driver-node-sqlite
+
   behaviour:
     name: behavioural fixtures on all three engines
     runs-on: ubuntu-latest

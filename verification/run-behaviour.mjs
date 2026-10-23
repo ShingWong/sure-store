@@ -12,8 +12,8 @@
 
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 
 import { renderPlaceholder } from "../impl/ts/index.ts";
@@ -21,6 +21,22 @@ import { renderPlaceholder } from "../impl/ts/index.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, "..");
 const VERBOSE = process.argv.includes("--verbose");
+
+/**
+ * `--driver <binding>=<path>` — run that binding's cases through a driver
+ * package. Repeatable. Without it the built-in adapters are used, so the gate
+ * still runs on a clone with nothing installed.
+ */
+const driverPaths = new Map();
+for (let i = 0; i < process.argv.length; i++) {
+  if (process.argv[i] !== "--driver") continue;
+  const [name, target] = String(process.argv[i + 1] ?? "").split("=");
+  if (!name || !target) {
+    console.error("--driver expects <binding>=<path>");
+    process.exit(2);
+  }
+  driverPaths.set(name, target);
+}
 
 const contract = JSON.parse(readFileSync(join(ROOT, "contracts", "engines.json"), "utf8"));
 
@@ -168,11 +184,54 @@ async function adapterFor(engine) {
 
 /** The adapter for a binding, or null. Keyed by binding, not engine. */
 async function adapterForBinding(bindingName) {
+  const external = driverPaths.get(bindingName);
+  if (external) return externalDriver(bindingName, external);
   if (bindingName === "node:sqlite") return nodeSqlite();
   if (bindingName === "@tursodatabase/database/compat") return turso();
   if (bindingName === "pg") return postgres();
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// External drivers — `--driver <binding>=<path>`
+//
+// Runs that binding's cases through a driver package instead of the built-in
+// adapter. The runner must not depend on any driver (this repository's gates
+// install nothing), so the driver is named on the command line and loaded by
+// path. The dependency stays one-directional: consumer -> driver -> sure-store,
+// and this file never imports a driver package by name.
+//
+// The adapter logic below deliberately stays HERE rather than in the driver:
+// "single statements go through run() so the envelope is observable" is a rule
+// about how fixtures are verified, not a fact about any binding.
+// ---------------------------------------------------------------------------
+
+function externalDriver(bindingName, target) {
+  return {
+    label: `${bindingName} via ${target}`,
+    async open() {
+      const mod = await import(pathToFileURL(resolve(target)).href);
+      const open = mod.open ?? mod.default?.open;
+      if (typeof open !== "function") {
+        throw new Error(`${target} does not export open()`);
+      }
+      const conn = await open();
+      return {
+        exec(sql, params = []) {
+          if (returnsRows(sql)) return { rows: conn.all(sql, params), info: null };
+          const single = !sql.trim().replace(/;\s*$/, "").includes(";");
+          if (single) return { rows: null, info: conn.run(sql, params) };
+          conn.exec(sql);
+          return { rows: null, info: null };
+        },
+        close() {
+          conn.close();
+        },
+      };
+    },
+  };
+}
+
 
 // ---------------------------------------------------------------------------
 // Contract resolution
@@ -466,7 +525,9 @@ for (const file of FIXTURES) {
     const adapter = await adapterForBinding(name);
     for (const caseDef of fixture.cases) {
       if ((caseDef.scope ?? "engine") !== "binding") continue;
-      await attempt(file, caseDef, scope, adapter, binding.params, name);
+      // The adapter names its own driver: a binding-scoped run must say WHICH
+      // driver satisfied it, or a conformance run cannot be told from a fallback.
+      await attempt(file, caseDef, scope, adapter, binding.params, adapter?.label ?? name);
     }
   }
 }

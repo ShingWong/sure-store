@@ -12,6 +12,9 @@
     "url": "git+https://github.com/ShingWong/sure-store.git"
   },
   "type": "module",
+  "workspaces": [
+    "drivers/*"
+  ],
   "main": "./impl/ts/index.ts",
   "exports": {
     ".": {
@@ -30,7 +33,7 @@
     "verify:resolver": "node --experimental-strip-types verification/run-behaviour.mjs --self-check",
     "test": "node --test test/*.test.mjs",
     "ci": "npm run security:check && npm run check:contracts && npm test && npm run verify && npm run verify:resolver",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && tsc -p drivers/node-sqlite/tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "prepack": "npm run build",
     "verify:behaviour:all": "node --experimental-strip-types verification/run-behaviour.mjs --require-all"

@@ -1,0 +1,35 @@
+{
+  "name": "@shing.wong/sure-store-driver-node-sqlite",
+  "version": "0.1.0",
+  "description": "node:sqlite driver for @shing.wong/sure-store — the positional-q binding, read out of the contract",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "ShingWong",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShingWong/sure-store.git",
+    "directory": "drivers/node-sqlite"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "@shing.wong/sure-store": "^0.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --test test/*.test.mjs"
+  }
+}
