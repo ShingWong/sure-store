@@ -37,6 +37,11 @@ test("the package ships the contract beside the code", () => {
   assert.ok(pkg.files?.includes("dist"), "files must include dist");
   assert.ok(pkg.files?.includes("contracts"), "files must include contracts");
   assert.equal(pkg.exports?.["./contracts"], "./contracts/engines.json");
+  // The fixtures ARE the contract: a published package whose consumer cannot
+  // read them makes "a runner is correct when it satisfies them" unverifiable
+  // from the only artifact most consumers ever see.
+  assert.ok(pkg.files?.includes("verification/fixtures"), "files must include the fixtures");
+  assert.ok(pkg.files?.includes("docs"), "files must include the guide");
 });
 
 test("the built package imports under plain node", async (t) => {

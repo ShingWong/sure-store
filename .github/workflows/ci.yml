@@ -60,6 +60,11 @@ jobs:
       - name: Contract verification — fixtures against the reference renderer
         run: npm run verify
 
+      # A second language, from the standard library alone: the claim that the
+      # fixtures are language-neutral is either demonstrated or it is a slogan.
+      - name: The same fixtures, through a Python runner
+        run: npm run verify:python
+
   package:
     name: package builds and imports
     runs-on: ubuntu-latest
