@@ -87,7 +87,8 @@ jobs:
             const pkg = require("./package.json");
             const bad = [];
             for (const [subpath, entry] of Object.entries(pkg.exports ?? {})) {
-              for (const value of Object.values(entry)) {
+              const targets = typeof entry === "string" ? [entry] : Object.values(entry);
+              for (const value of targets) {
                 if (typeof value === "string" && !fs.existsSync(value)) bad.push(`${subpath}: ${value}`);
               }
             }
