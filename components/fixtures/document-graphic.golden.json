@@ -1,0 +1,66 @@
+{
+  "name": "document-graphic",
+  "family": "figure",
+  "data": {
+    "entity": "graphics",
+    "projection": [
+      "alt"
+    ],
+    "shape": "none"
+  },
+  "print": {
+    "keepTogether": true,
+    "breakBefore": false,
+    "repeatHeader": false
+  },
+  "guards": [
+    "ifpresent(record.alt, true)"
+  ],
+  "projectionRefs": [
+    "alt"
+  ],
+  "guardResults": {
+    "ifpresent(record.alt, true)": true
+  },
+  "sure_ui": [
+    "document",
+    "figure",
+    "form",
+    "buttons"
+  ],
+  "cssClasses": {
+    "form": "sure-form",
+    "graphic": "sure-document__graphic",
+    "plot": "sure-figure__plot"
+  },
+  "fixture": {
+    "input": {
+      "synthetic": true,
+      "seed": 20261119,
+      "generatedAt": "2026-11-19",
+      "shape": "none",
+      "record": {
+        "alt": "Test illustration"
+      },
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 10 10\"><title>Test illustration</title><desc>A synthetic mark.</desc></svg>"
+    },
+    "expect": {
+      "html_contains": [
+        "<title>Test illustration</title>",
+        "<desc>A synthetic mark.</desc>"
+      ],
+      "pages": 1,
+      "guards_pass": true
+    }
+  },
+  "replay": {
+    "row_count": 0,
+    "amounts": [],
+    "guards_pass": true,
+    "html_contains": [
+      "<title>Test illustration</title>",
+      "<desc>A synthetic mark.</desc>"
+    ]
+  },
+  "contractDigest": "6ae770b24218b6f26fe84f60f2127e64832a96e9113b8e91bf13a05e8b791bb4"
+}

@@ -1,0 +1,52 @@
+name: document-totals
+description: Labelled totals that display server figures and never compute the binding total themselves.
+tier: prototype
+parameters:
+  fields:
+    - name: lines
+      type: text
+      required: true
+    - name: precision
+      type: number
+      required: false
+behavior:
+  notificationModes: []
+  audio: { errorBell: false, successChime: false }
+  voiceHelp: false
+  autoFocus: false
+  confirmBeforeCancel: false
+
+# ── sure-factor 0.6 document-part extension ─────────────────────────────────
+family: data
+data:
+  entity: examples
+  projection: [subtotal, tax, grand_total]
+  shape: record
+print:
+  keepTogether: true
+  breakBefore: false
+  repeatHeader: false
+guards:
+  - record.grand_total == record.subtotal + record.tax
+fixture:
+  input:
+    synthetic: true
+    seed: 20261119
+    generatedAt: '2026-11-19'
+    shape: record
+    record: { subtotal: 200.00, tax: 20.00, grand_total: 220.00 }
+  expect:
+    html_contains: ['$200.00', '$20.00', '$220.00']
+    pages: 1
+    guards_pass: true
+# ────────────────────────────────────────────────────────────────────────────
+
+sure_ui: [table, form, buttons]
+cssClasses:
+  form: sure-form
+  table: sure-table
+  row: sure-table__row
+  cell: sure-table__cell
+  total: sure-table--total
+example:
+  usage: Show a subtotal, a tax figure and a server total as labelled rows.

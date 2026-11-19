@@ -1,0 +1,78 @@
+{
+  "name": "document-totals",
+  "family": "data",
+  "data": {
+    "entity": "examples",
+    "projection": [
+      "subtotal",
+      "tax",
+      "grand_total"
+    ],
+    "shape": "record"
+  },
+  "print": {
+    "keepTogether": true,
+    "breakBefore": false,
+    "repeatHeader": false
+  },
+  "guards": [
+    "record.grand_total == record.subtotal + record.tax"
+  ],
+  "projectionRefs": [
+    "grand_total",
+    "subtotal",
+    "tax"
+  ],
+  "guardResults": {
+    "record.grand_total == record.subtotal + record.tax": true
+  },
+  "sure_ui": [
+    "table",
+    "form",
+    "buttons"
+  ],
+  "cssClasses": {
+    "form": "sure-form",
+    "table": "sure-table",
+    "row": "sure-table__row",
+    "cell": "sure-table__cell",
+    "total": "sure-table--total"
+  },
+  "fixture": {
+    "input": {
+      "synthetic": true,
+      "seed": 20261119,
+      "generatedAt": "2026-11-19",
+      "shape": "record",
+      "record": {
+        "subtotal": 200,
+        "tax": 20,
+        "grand_total": 220
+      }
+    },
+    "expect": {
+      "html_contains": [
+        "$200.00",
+        "$20.00",
+        "$220.00"
+      ],
+      "pages": 1,
+      "guards_pass": true
+    }
+  },
+  "replay": {
+    "row_count": 0,
+    "amounts": [
+      "$20.00",
+      "$200.00",
+      "$220.00"
+    ],
+    "guards_pass": true,
+    "html_contains": [
+      "$200.00",
+      "$20.00",
+      "$220.00"
+    ]
+  },
+  "contractDigest": "94f215d6a2db6c4253aff1b3b0192a67a6ac6135b42fac4dd82f8c38fe4e9bd0"
+}

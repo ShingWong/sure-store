@@ -34,6 +34,49 @@ domain logic, schema semantics, and configuration — not here.
 
 1. Check existing components in this directory and in sure-factor's built-in
    catalog — extend before adding.
-2. New component = YAML here + fixture test in the `verification/` suite.
+2. New component = YAML here + fixture golden in `fixtures/` + a row in the
+   verification suite's `EXPECTED` list.
 3. Re-run the consuming product's generator; commit generated output in the
    product repo, never drift from it by hand.
+
+## Document parts (the sure-document catalog)
+
+The first five entries of the `sure-document` catalog (`docs/catalog.md` §6)
+live here. Each is a sure-factor `CatalogComponent` with the 0.6 document-part
+extension (`family`, `data`, `print`, `guards`, `fixture`) plus the two template
+blocks sure-factor's generator still requires (`form`, `buttons`):
+
+| Entry | Family | Shape | Guards check |
+|---|---|---|---|
+| `document-table` | `data` | rows | total equals the sum of row amounts; rows exist |
+| `document-totals` | `data` | record | grand total equals subtotal plus tax |
+| `document-keyvalue` | `structure` | record | every value is present |
+| `document-schedule` | `data` | rows | total equals amounts plus late fees; installments exist |
+| `document-graphic` | `figure` | none | the accessible alt text is present |
+
+`document-graphic` additionally declares the published sure-ui `document` and
+`figure` blocks; the table entries use `table`. No block is declared that
+sure-ui 0.3.6 does not ship.
+
+### Fixture goldens
+
+Every entry's `fixture` is synthetic: seeded (`20261119`), `"synthetic": true`,
+with a seed-derived `generatedAt`, invented names, round amounts and future
+dates. No product, company or person identifier appears. The private denylist
+scan stays in the consuming product's CI.
+
+`fixtures/<name>.golden.json` is the committed replay of the entry: its data
+contract, guard projections and results, synthetic replay facts and a digest
+of the whole contract. The verification suite:
+
+```
+npm run verify:components          # replay all five entries, compare goldens
+node verification/run-components.mjs --update   # regenerate goldens (review the diff)
+```
+
+runs under plain node with no installed dependency, because the gate job
+installs nothing. Its validation rules are a transcription of the published
+`@shing.wong/sure-factor@0.6.0` shapes and `@shing.wong/sure-ui@0.3.6` block
+list, pinned by `test/components.test.mjs`. Drift in an entry, a guard that
+names an undeclared projection, a missing template block, or a non-synthetic
+fixture fails the gate loudly.

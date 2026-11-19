@@ -1,0 +1,51 @@
+name: document-graphic
+description: An inline SVG illustration sized by the sheet, with a title, description and text fallback.
+tier: prototype
+parameters:
+  fields:
+    - name: svg
+      type: text
+      required: true
+    - name: maxHeight
+      type: number
+      required: false
+behavior:
+  notificationModes: []
+  audio: { errorBell: false, successChime: false }
+  voiceHelp: false
+  autoFocus: false
+  confirmBeforeCancel: false
+
+# ── sure-factor 0.6 document-part extension ─────────────────────────────────
+family: figure
+data:
+  entity: graphics
+  projection: [alt]
+  shape: none
+print:
+  keepTogether: true
+  breakBefore: false
+  repeatHeader: false
+guards:
+  - ifpresent(record.alt, true)
+fixture:
+  input:
+    synthetic: true
+    seed: 20261119
+    generatedAt: '2026-11-19'
+    shape: none
+    record: { alt: 'Test illustration' }
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Test illustration</title><desc>A synthetic mark.</desc></svg>'
+  expect:
+    html_contains: ['<title>Test illustration</title>', '<desc>A synthetic mark.</desc>']
+    pages: 1
+    guards_pass: true
+# ────────────────────────────────────────────────────────────────────────────
+
+sure_ui: [document, figure, form, buttons]
+cssClasses:
+  form: sure-form
+  graphic: sure-document__graphic
+  plot: sure-figure__plot
+example:
+  usage: Place a synthetic inline SVG mark with accessible text on a sheet.

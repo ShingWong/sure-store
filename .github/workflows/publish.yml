@@ -1,0 +1,108 @@
+name: Publish
+
+# Stages a release when the version in package.json changes on main.
+# This never publishes directly and never approves: npm stages the package and
+# a maintainer approves it with 2FA at https://www.npmjs.com → Staged Packages.
+# Authentication uses OIDC trusted publishing; no npm token is stored here.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    name: stage for release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      # `npm stage publish` requires npm >= 11.15.0; setup-node uses the
+      # runner's own npm (10.x), which predates it.
+      - name: Ensure npm supports staged publishing
+        run: |
+          npm --version
+          if ! npm stage --help >/dev/null 2>&1; then
+            echo "::notice::upgrading npm to 11 (runner ships 10.x, which predates npm stage)"
+            npm install -g 'npm@11'
+          fi
+          npm stage --help >/dev/null 2>&1 || { echo "::error::npm still lacks 'stage'"; exit 1; }
+
+      - name: Detect version change
+        id: detect
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          current=$(node -p "require('./package.json').version")
+          previous=$(git show "${BEFORE_SHA}:package.json" 2>/dev/null \
+            | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "")
+          if [ -z "${previous:-}" ] || [ "$previous" != "$current" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version changed: ${previous:-none} -> ${current}"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "version unchanged at ${current}; nothing to stage"
+          fi
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Verify all contract gates
+        if: steps.detect.outputs.changed == 'true'
+        run: npm run ci
+
+      - name: Build
+        if: steps.detect.outputs.changed == 'true'
+        run: npm run build
+
+      # The exports map is the public surface: every target must exist in the
+      # tarball or a consumer's install fails even though CI went green.
+      - name: Verify package exports resolve
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+            const bad = [];
+            for (const [subpath, entry] of Object.entries(pkg.exports ?? {})) {
+              for (const value of Object.values(entry)) {
+                if (typeof value === "string" && !fs.existsSync(value)) bad.push(`${subpath}: ${value}`);
+              }
+            }
+            if (bad.length) { console.error("missing exports targets:\n" + bad.join("\n")); process.exit(1); }
+            console.log("package exports OK");
+          '
+
+      - name: Stage for publishing
+        if: steps.detect.outputs.changed == 'true'
+        run: npm stage publish
+
+      - name: Summary
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          echo "::notice title=Staged for release::\
+          @shing.wong/sure-store@${{ steps.detect.outputs.current }} is staged. \
+          Approve it at https://www.npmjs.com (Staged Packages tab) with 2FA. \
+          Staged packages expire, so approve before the deadline."

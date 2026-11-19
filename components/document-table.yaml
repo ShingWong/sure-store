@@ -1,0 +1,70 @@
+name: document-table
+description: Repeating rows with a repeated header, an optional subtotal, and rows kept together on a page.
+tier: prototype
+parameters:
+  fields:
+    - name: columns
+      type: text
+      required: true
+    - name: rows
+      type: text
+      required: true
+    - name: subtotal
+      type: boolean
+      required: false
+    - name: keepTogether
+      type: boolean
+      required: false
+behavior:
+  notificationModes: []
+  audio: { errorBell: false, successChime: false }
+  voiceHelp: false
+  autoFocus: false
+  confirmBeforeCancel: false
+
+# ── sure-factor 0.6 document-part extension ─────────────────────────────────
+family: data
+data:
+  entity: examples
+  projection: [line_number, due_on, amount, description]
+  shape: rows
+print:
+  keepTogether: true
+  breakBefore: false
+  repeatHeader: true
+guards:
+  - totals.grand_total == sum(rows.amount)
+  - count(rows.line_number) >= 1
+fixture:
+  input:
+    synthetic: true
+    seed: 20261119
+    generatedAt: '2026-11-19'
+    shape: rows
+    rows:
+      - line_number: 1
+        due_on: '2031-04-15'
+        amount: 120.00
+        description: 'Test Person A'
+      - line_number: 2
+        due_on: '2031-05-15'
+        amount: 120.00
+        description: 'Test Person B'
+    totals: { grand_total: 240.00 }
+  expect:
+    html_contains: ['$120.00', '$240.00', 'Test Person A']
+    pages: 1
+    row_count: 2
+    guards_pass: true
+# ────────────────────────────────────────────────────────────────────────────
+
+sure_ui: [table, form, buttons]
+cssClasses:
+  form: sure-form
+  table: sure-table
+  row: sure-table__row
+  cell: sure-table__cell
+  header: sure-table__header
+  print: sure-table--print
+example:
+  usage: Render two synthetic line rows with a repeated header and a server-computed total.

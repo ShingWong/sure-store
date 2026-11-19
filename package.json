@@ -1,6 +1,6 @@
 {
   "name": "@shing.wong/sure-store",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Engine-agnostic storage contract: dialect tables, escape vocabulary and a verification suite shared by sure-mail, sure-factor, memeng and pai-core.",
   "license": "MIT",
   "publishConfig": {
@@ -27,7 +27,8 @@
   "scripts": {
     "security:check": "node scripts/security-check.mjs",
     "check:contracts": "node -e \"const fs=require('fs'),p=require('path');let n=0;for(const d of ['contracts','verification/fixtures'])for(const f of fs.readdirSync(d).filter(x=>x.endsWith('.json'))){JSON.parse(fs.readFileSync(p.join(d,f),'utf8'));n++}console.log(n+' JSON files valid')\"",
-    "verify": "npm run verify:render && npm run verify:behaviour",
+    "verify": "npm run verify:render && npm run verify:behaviour && npm run verify:components",
+    "verify:components": "node --experimental-strip-types verification/run-components.mjs",
     "verify:render": "node --experimental-strip-types verification/run-ts.mjs",
     "verify:behaviour": "node --experimental-strip-types verification/run-behaviour.mjs",
     "verify:resolver": "node --experimental-strip-types verification/run-behaviour.mjs --self-check",
@@ -55,6 +56,7 @@
     "contracts",
     "spec",
     "docs",
+    "components",
     "verification/fixtures"
   ],
   "devDependencies": {
