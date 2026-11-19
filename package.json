@@ -1,6 +1,6 @@
 {
   "name": "@shing.wong/sure-store",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Engine-agnostic storage contract: dialect tables, escape vocabulary and a verification suite shared by sure-mail, sure-factor, memeng and pai-core.",
   "license": "MIT",
   "publishConfig": {
