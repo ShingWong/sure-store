@@ -1,0 +1,96 @@
+{
+  "name": "document-schedule",
+  "family": "data",
+  "data": {
+    "entity": "examples",
+    "projection": [
+      "installment",
+      "due_on",
+      "amount",
+      "late_fee"
+    ],
+    "shape": "rows"
+  },
+  "print": {
+    "keepTogether": true,
+    "breakBefore": false,
+    "repeatHeader": true
+  },
+  "guards": [
+    "totals.grand_total == sum(rows.amount) + sum(rows.late_fee)",
+    "count(rows.installment) >= 1"
+  ],
+  "projectionRefs": [
+    "amount",
+    "installment",
+    "late_fee"
+  ],
+  "guardResults": {
+    "totals.grand_total == sum(rows.amount) + sum(rows.late_fee)": true,
+    "count(rows.installment) >= 1": true
+  },
+  "sure_ui": [
+    "table",
+    "form",
+    "buttons"
+  ],
+  "cssClasses": {
+    "form": "sure-form",
+    "table": "sure-table",
+    "row": "sure-table__row",
+    "cell": "sure-table__cell",
+    "header": "sure-table__header"
+  },
+  "fixture": {
+    "input": {
+      "synthetic": true,
+      "seed": 20261119,
+      "generatedAt": "2026-11-19",
+      "shape": "rows",
+      "rows": [
+        {
+          "installment": 1,
+          "due_on": "2031-06-15",
+          "amount": 100,
+          "late_fee": 5
+        },
+        {
+          "installment": 2,
+          "due_on": "2031-07-15",
+          "amount": 100,
+          "late_fee": 5
+        }
+      ],
+      "totals": {
+        "grand_total": 210
+      }
+    },
+    "expect": {
+      "html_contains": [
+        "$100.00",
+        "$5.00",
+        "$210.00",
+        "2031-06-15"
+      ],
+      "pages": 1,
+      "row_count": 2,
+      "guards_pass": true
+    }
+  },
+  "replay": {
+    "row_count": 2,
+    "amounts": [
+      "$100.00",
+      "$210.00",
+      "$5.00"
+    ],
+    "guards_pass": true,
+    "html_contains": [
+      "$100.00",
+      "$5.00",
+      "$210.00",
+      "2031-06-15"
+    ]
+  },
+  "contractDigest": "b0f91607bcc1ac0eefc3759bafc1820051e2dfe43b96af8fb1fde4011c866983"
+}

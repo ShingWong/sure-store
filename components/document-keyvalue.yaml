@@ -1,0 +1,53 @@
+name: document-keyvalue
+description: Label/value pairs whose labels come from field metadata, not from the data.
+tier: prototype
+parameters:
+  fields:
+    - name: pairs
+      type: text
+      required: true
+behavior:
+  notificationModes: []
+  audio: { errorBell: false, successChime: false }
+  voiceHelp: false
+  autoFocus: false
+  confirmBeforeCancel: false
+
+# ── sure-factor 0.6 document-part extension ─────────────────────────────────
+family: structure
+data:
+  entity: examples
+  projection: [label, value]
+  shape: record
+print:
+  keepTogether: true
+  breakBefore: false
+  repeatHeader: false
+guards:
+  - ifpresent(record.value, true)
+fixture:
+  input:
+    synthetic: true
+    seed: 20261119
+    generatedAt: '2026-11-19'
+    shape: record
+    record:
+      - label: Reference
+        value: 'Sample Reference 7'
+      - label: Issued
+        value: '2031-02-01'
+  expect:
+    html_contains: ['Reference', 'Sample Reference 7', '2031-02-01']
+    pages: 1
+    guards_pass: true
+# ────────────────────────────────────────────────────────────────────────────
+
+sure_ui: [table, form, buttons]
+cssClasses:
+  form: sure-form
+  table: sure-table
+  row: sure-table__row
+  cell: sure-table__cell
+  header: sure-table__header
+example:
+  usage: Render a short block of labelled metadata pulled from sure-factor field metadata.

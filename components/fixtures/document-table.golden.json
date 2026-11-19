@@ -1,0 +1,93 @@
+{
+  "name": "document-table",
+  "family": "data",
+  "data": {
+    "entity": "examples",
+    "projection": [
+      "line_number",
+      "due_on",
+      "amount",
+      "description"
+    ],
+    "shape": "rows"
+  },
+  "print": {
+    "keepTogether": true,
+    "breakBefore": false,
+    "repeatHeader": true
+  },
+  "guards": [
+    "totals.grand_total == sum(rows.amount)",
+    "count(rows.line_number) >= 1"
+  ],
+  "projectionRefs": [
+    "amount",
+    "line_number"
+  ],
+  "guardResults": {
+    "totals.grand_total == sum(rows.amount)": true,
+    "count(rows.line_number) >= 1": true
+  },
+  "sure_ui": [
+    "table",
+    "form",
+    "buttons"
+  ],
+  "cssClasses": {
+    "form": "sure-form",
+    "table": "sure-table",
+    "row": "sure-table__row",
+    "cell": "sure-table__cell",
+    "header": "sure-table__header",
+    "print": "sure-table--print"
+  },
+  "fixture": {
+    "input": {
+      "synthetic": true,
+      "seed": 20261119,
+      "generatedAt": "2026-11-19",
+      "shape": "rows",
+      "rows": [
+        {
+          "line_number": 1,
+          "due_on": "2031-04-15",
+          "amount": 120,
+          "description": "Test Person A"
+        },
+        {
+          "line_number": 2,
+          "due_on": "2031-05-15",
+          "amount": 120,
+          "description": "Test Person B"
+        }
+      ],
+      "totals": {
+        "grand_total": 240
+      }
+    },
+    "expect": {
+      "html_contains": [
+        "$120.00",
+        "$240.00",
+        "Test Person A"
+      ],
+      "pages": 1,
+      "row_count": 2,
+      "guards_pass": true
+    }
+  },
+  "replay": {
+    "row_count": 2,
+    "amounts": [
+      "$120.00",
+      "$240.00"
+    ],
+    "guards_pass": true,
+    "html_contains": [
+      "$120.00",
+      "$240.00",
+      "Test Person A"
+    ]
+  },
+  "contractDigest": "e6fc9f78432a95bf2cf65f96a5ab96f58ef82f4fab0b008d408265b8a7653bf8"
+}

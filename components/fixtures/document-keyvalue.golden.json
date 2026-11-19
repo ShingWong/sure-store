@@ -1,0 +1,76 @@
+{
+  "name": "document-keyvalue",
+  "family": "structure",
+  "data": {
+    "entity": "examples",
+    "projection": [
+      "label",
+      "value"
+    ],
+    "shape": "record"
+  },
+  "print": {
+    "keepTogether": true,
+    "breakBefore": false,
+    "repeatHeader": false
+  },
+  "guards": [
+    "ifpresent(record.value, true)"
+  ],
+  "projectionRefs": [
+    "value"
+  ],
+  "guardResults": {
+    "ifpresent(record.value, true)": true
+  },
+  "sure_ui": [
+    "table",
+    "form",
+    "buttons"
+  ],
+  "cssClasses": {
+    "form": "sure-form",
+    "table": "sure-table",
+    "row": "sure-table__row",
+    "cell": "sure-table__cell",
+    "header": "sure-table__header"
+  },
+  "fixture": {
+    "input": {
+      "synthetic": true,
+      "seed": 20261119,
+      "generatedAt": "2026-11-19",
+      "shape": "record",
+      "record": [
+        {
+          "label": "Reference",
+          "value": "Sample Reference 7"
+        },
+        {
+          "label": "Issued",
+          "value": "2031-02-01"
+        }
+      ]
+    },
+    "expect": {
+      "html_contains": [
+        "Reference",
+        "Sample Reference 7",
+        "2031-02-01"
+      ],
+      "pages": 1,
+      "guards_pass": true
+    }
+  },
+  "replay": {
+    "row_count": 2,
+    "amounts": [],
+    "guards_pass": true,
+    "html_contains": [
+      "Reference",
+      "Sample Reference 7",
+      "2031-02-01"
+    ]
+  },
+  "contractDigest": "30132e4ba998f4f499dd74ebe3166d71771a6308c99ba1b417c67b14c51979c6"
+}
