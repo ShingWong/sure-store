@@ -1,7 +1,7 @@
 # sure-store
 
 **An engine-agnostic storage contract.** Not a library you call — a *spec*, a set
-of machine-readable dialect tables, and a verification suite shared by four
+of machine-readable dialect tables, and a verification suite shared by five
 projects that each own their own schema.
 
 | consumer | language | the schema it owns |
@@ -132,24 +132,25 @@ npm run check:contracts  # the tables and fixtures are valid JSON
 ```
 
 CI runs exactly this set (`.github/workflows/ci.yml`), with a **full-history
-checkout** — the security gate inspects commit author and committer identities,
+checkout** — the local scanner inspects commit author and committer identities,
 and a shallow clone would silently skip them, which is precisely how a personal
-address reaches a public repo.
+address reaches a public repo. In addition, `.github/workflows/ci-gate.yml`
+calls the shared [`sure-ci-gate`](https://github.com/ShingWong/sure-ci-gate)
+with the private sure-stack denylist supplied at CI time.
 
 The live probes under `verification/live/` re-run the measurements above against
 real engines (sqlite, Turso, Postgres) so the tables cannot drift from reality.
 
 ## Status
 
-**0.3.0 — the contract is measured, and now ships with the fixtures that define it.**
-Private until it is stable.**
+**0.4.1 — the contract is measured, published and consumed.** The repository
+is **public** (`ShingWong/sure-store`), and npm's `latest` tag points at 0.4.1.
 
-The repository is **private on purpose, not as a default**: the tables are still
-moving (0.3.0, unreleased), and a public contract that changes weekly teaches
-consumers to pin a snapshot and stop reading it. It becomes public when the
-stability bar below is met — at which point the security gate has already been
-running since the first commit, because history is permanent and cannot be
-retroactively cleaned.
+The tables were kept private while they were still moving: a public contract
+that changes weekly teaches consumers to pin a snapshot and stop reading it.
+The security gate ran from the first commit, because history is permanent and
+cannot be retroactively cleaned. The stability bar below records when that bar
+was met.
 
 **Stability bar** (proposed; the last item is the one that actually protects
 consumers):
@@ -163,8 +164,8 @@ consumers):
 - [x] the fixture format is final — frozen at `formatVersion: 1`, with the
       extension rule written down and enforced (`verification/validate-fixtures.mjs`):
       additive within 1, a version bump for anything a v1 runner would misread
-- [ ] at least one consumer depends on the published package and its own gates
-      pass against it — a contract nobody consumes is a hypothesis
+- [x] at least one consumer depends on the published package and its own gates
+      pass against it — sure-document declares `^0.4.1` and verifies against it
 
 - ✅ the capability model and the measured engine matrix (`spec/`)
 - ✅ `contracts/engines.json` + JSON Schema
@@ -182,4 +183,4 @@ consumers):
 
 MIT. Deliberately: the AGPL-or-commercial projects (memeng, pai-core) can consume
 MIT, and the reverse is not true — so MIT is the only license that serves all
-four consumers.
+five consumers.

@@ -56,7 +56,7 @@ blocks sure-factor's generator still requires (`form`, `buttons`):
 
 `document-graphic` additionally declares the published sure-ui `document` and
 `figure` blocks; the table entries use `table`. No block is declared that
-sure-ui 0.3.6 does not ship.
+sure-ui 0.3.7 does not ship.
 
 ### Fixture goldens
 
@@ -76,7 +76,7 @@ node verification/run-components.mjs --update   # regenerate goldens (review the
 
 runs under plain node with no installed dependency, because the gate job
 installs nothing. Its validation rules are a transcription of the published
-`@shing.wong/sure-factor@0.6.0` shapes and `@shing.wong/sure-ui@0.3.6` block
+`@shing.wong/sure-factor@0.6.2` shapes and `@shing.wong/sure-ui@0.3.7` block
 list, pinned by `test/components.test.mjs`. Drift in an entry, a guard that
 names an undeclared projection, a missing template block, or a non-synthetic
 fixture fails the gate loudly.
