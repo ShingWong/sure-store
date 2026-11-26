@@ -2,10 +2,10 @@
 
 ## What this repo is
 
-An **engine-agnostic storage contract** shared by sure-mail, sure-factor, memeng
-and pai-core. It holds the dialect tables, the spec, per-language reference
-renderers, and the verification suite. It does **not** hold any consumer's
-schema.
+An **engine-agnostic storage contract** shared by sure-mail, sure-factor, memeng,
+pai-core and sun-portal. It holds the dialect tables, the spec, per-language
+reference renderers, and the verification suite. It does **not** hold any
+consumer's schema.
 
 The asset is **measurement**. Every claim in `contracts/engines.json` must be
 reproducible against a live engine, and the probe that proves it belongs in
@@ -53,16 +53,18 @@ reproducible against a live engine, and the probe that proves it belongs in
   npm test                 # proves the scanner fires, and allows look-alikes
   npm run verify           # shared fixtures against the reference renderer
   ```
-- **This repository is destined to be public, so the security gate is not
-  optional even while it is private.** It stays private until the contract is
-  stable (README § Status), but visibility is not a licence: the gate runs from
-  the first commit because history is permanent, and an entry removed today is
-  still in the object store tomorrow. Every tracked file is treated as published
-  — unlike a repo with a private `plan/`, there is no internal tier. A personal
-  email in *commit metadata* likewise cannot be fixed by editing a file, which
-  is why the gate inspects history: use an approved identity, and if a finding
-  appears in history, rewrite it before publishing rather than adding an
-  allow-list entry.
+- **This repository is public, so the security gate is not optional.** It was
+  private only until the contract was stable (README § Status), but visibility
+  is not a licence: the gate ran from the first commit because history is
+  permanent, and an entry removed today is still in the object store tomorrow.
+  Every tracked file is treated as published — unlike a repo with a private
+  `plan/`, there is no internal tier. A personal email in *commit metadata*
+  likewise cannot be fixed by editing a file, which is why the gate inspects
+  history: use an approved identity, and if a finding appears in history, rewrite
+  it rather than adding an allow-list entry. CI runs the local scanner
+  (`.github/workflows/ci.yml`) **and** the shared `sure-ci-gate`
+  (`.github/workflows/ci-gate.yml`, private denylist supplied by
+  `SURE_SECURITY_TOKEN`).
 - Commit per stage. Imperative, scoped (`spec: …`, `contract: …`, `impl(ts): …`).
 
 ## Adding an engine
@@ -82,8 +84,7 @@ The obligation is: read `contracts/engines.json`, satisfy
 
 ## Publishing
 
-Staged, not direct: `npm stage publish` defers 2FA to an explicit approval step,
-which suits a repository that stays private until the contract is stable.
+Staged, not direct: `npm stage publish` defers 2FA to an explicit approval step.
 
 ```bash
 npm whoami                            # must succeed BEFORE anything else
@@ -93,11 +94,12 @@ npm stage approve <stage-id>          # requires 2FA
 npm view @shing.wong/sure-store       # version + dist-tag afterwards
 ```
 
-After the first staged approval, `latest` is npm's `0.0.0-stage` placeholder
-("Temporary package placeholder for staged publishing") and the real version sits
-on the tag you chose — `next` today. Consumers must install `@next` until `latest`
-is deliberately promoted; a bare `npm i` gets the placeholder, which is npm's
-guard against an unapproved first release, not a fault in the package.
+The first staged approval left `latest` at npm's `0.0.0-stage` placeholder and
+the real version on `next`; that is no longer the case. The current tags are
+`latest: 0.4.1` and `next: 0.3.0` — install the default (`@shing.wong/sure-store`)
+unless you deliberately want the older `next` tag. Keep using the staged flow
+for new releases; the placeholder behaviour only applies to an unapproved first
+release.
 
 Auth is a granular access token with publish rights on `@shing.wong`; classic
 tokens that bypass 2FA are being restricted. Note the failure order: npm
