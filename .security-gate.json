@@ -1,0 +1,10 @@
+{
+  "allow": [
+    {
+      "file": "scripts/security-check.mjs",
+      "label": "Email address",
+      "match": "noreply@github.com",
+      "reason": "published contact address in scanner source"
+    }
+  ]
+}
