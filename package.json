@@ -27,8 +27,9 @@
   "scripts": {
     "security:check": "node scripts/security-check.mjs",
     "check:contracts": "node -e \"const fs=require('fs'),p=require('path');let n=0;for(const d of ['contracts','verification/fixtures'])for(const f of fs.readdirSync(d).filter(x=>x.endsWith('.json'))){JSON.parse(fs.readFileSync(p.join(d,f),'utf8'));n++}console.log(n+' JSON files valid')\"",
-    "verify": "npm run verify:render && npm run verify:behaviour && npm run verify:components",
+    "verify": "npm run verify:render && npm run verify:behaviour && npm run verify:components && npm run verify:coverage",
     "verify:components": "node --experimental-strip-types verification/run-components.mjs",
+    "verify:coverage": "node verification/coverage.mjs",
     "verify:render": "node --experimental-strip-types verification/run-ts.mjs",
     "verify:behaviour": "node --experimental-strip-types verification/run-behaviour.mjs",
     "verify:resolver": "node --experimental-strip-types verification/run-behaviour.mjs --self-check",
