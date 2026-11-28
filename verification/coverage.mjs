@@ -143,6 +143,11 @@ function markdown(rows) {
   return lines.join('\n')
 }
 
+const factorAvailable = existsSync(join(FACTOR_DIR, 'catalog', 'components'))
+if (WRITE && !factorAvailable && !args.includes('--allow-partial')) {
+  console.error('sure-factor catalog not found; refusing to rewrite the full matrix. Use --allow-partial only deliberately.')
+  process.exit(2)
+}
 const rows = buildRows()
 if (WRITE) {
   writeFileSync(MATRIX, JSON.stringify({ schema: 1, generatedBy: 'verification/coverage.mjs', rows }, null, 2) + '\n')
@@ -156,7 +161,13 @@ const byId = new Map(existing.rows.map((row) => [row.id, row]))
 const problems = []
 const discoveredIds = rows.map((row) => row.id)
 for (const id of discoveredIds) if (!byId.has(id)) problems.push(`missing row: ${id}`)
-for (const id of byId.keys()) if (!discoveredIds.includes(id)) problems.push(`stale row: ${id}`)
+for (const row of existing.rows) {
+  if (discoveredIds.includes(row.id)) continue
+  // A checkout without sure-factor cannot rediscover its rows, but must not
+  // call them stale either; the committed matrix remains the authority.
+  if (row.source === 'sure-factor' && !factorAvailable) continue
+  problems.push(`stale row: ${row.id}`)
+}
 
 const roots = { 'sure-factor': FACTOR_DIR, 'sure-examples': EXAMPLES_DIR, 'sure-store': ROOT }
 for (const row of existing.rows) {
