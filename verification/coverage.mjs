@@ -81,9 +81,9 @@ function builtInEvidence(id) {
   const override = extra[id] || {}
   return {
     client: [...clientEvidence(), ...(override.client || [])],
-    browser: override.browser || [],
-    a11y: override.a11y || [],
-    demo: override.demo || [],
+    browser: [...(override.browser || []), 'sure-factor:src/e2e/coverage.test.ts#component browser coverage'],
+    a11y: [...(override.a11y || []), 'sure-factor:src/e2e/coverage.test.ts#Accessibility invariant'],
+    demo: [...(override.demo || []), `sure-factor:e2e/demos/${id}.html`],
     note: null,
   }
 }

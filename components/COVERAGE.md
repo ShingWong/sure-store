@@ -6,24 +6,24 @@ an honest gap, not a pass. **Phase D is not green until every row is green.**
 
 | Entry | Source | Tier | Client | Browser | A11y | Demo | Status |
 |---|---|---|---|---|---|---|---|
-| `account-settings` | sure-factor | production | ✓ | — | — | — | gap |
-| `auth-login` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `auth-register` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `auth-reset-password` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `contact-form` | sure-factor | vibe | ✓ | — | — | — | gap |
-| `crud-resource` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `data-table` | sure-factor | prototype | ✓ | ✓ | — | — | gap |
-| `dialog` | sure-factor | prototype | ✓ | — | — | — | gap |
+| `account-settings` | sure-factor | production | ✓ | ✓ | ✓ | ✓ | green |
+| `auth-login` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `auth-register` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `auth-reset-password` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `contact-form` | sure-factor | vibe | ✓ | ✓ | ✓ | ✓ | green |
+| `crud-resource` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `data-table` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `dialog` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
 | `form` | sure-factor | vibe | ✓ | ✓ | ✓ | ✓ | green |
-| `form-modal` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `horizontal-icon-menu` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `mail-search-filter` | sure-factor | vibe | ✓ | — | — | — | gap |
-| `markdown` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `message-actions` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `page-footer` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `preview-panel` | sure-factor | prototype | ✓ | — | — | — | gap |
-| `search-filter` | sure-factor | vibe | ✓ | — | — | — | gap |
-| `session-list` | sure-factor | prototype | ✓ | — | — | — | gap |
+| `form-modal` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `horizontal-icon-menu` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `mail-search-filter` | sure-factor | vibe | ✓ | ✓ | ✓ | ✓ | green |
+| `markdown` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `message-actions` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `page-footer` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `preview-panel` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `search-filter` | sure-factor | vibe | ✓ | ✓ | ✓ | ✓ | green |
+| `session-list` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
 | `document-graphic` | sure-store | prototype | — | — | — | — | gap |
 | `document-keyvalue` | sure-store | prototype | — | — | — | — | gap |
 | `document-schedule` | sure-store | prototype | — | — | — | — | gap |
@@ -34,111 +34,111 @@ an honest gap, not a pass. **Phase D is not green until every row is green.**
 
 ### account-settings
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/account-settings.html
 
 ### auth-login
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/auth-login.html
 
 ### auth-register
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/auth-register.html
 
 ### auth-reset-password
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/auth-reset-password.html
 
 ### contact-form
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/contact-form.html
 
 ### crud-resource
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/crud-resource.html
 
 ### data-table
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage; sure-factor:src/generate-client.test.ts#emits a table renderer for data-table, not a form
-- **browser:** sure-examples:components/tests/browser.test.mjs#the generated classes are the catalog ones
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-examples:components/tests/browser.test.mjs#the generated classes are the catalog ones; sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/data-table.html
 
 ### dialog
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/dialog.html
 
 ### form
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage; sure-factor:src/generate-client.test.ts#emits a module that parses as JavaScript
-- **browser:** sure-examples:components/tests/browser.test.mjs#the generated form appears
-- **a11y:** sure-examples:components/tests/browser.test.mjs#every field has a label
-- **demo:** sure-examples:components/
+- **browser:** sure-examples:components/tests/browser.test.mjs#the generated form appears; sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-examples:components/tests/browser.test.mjs#every field has a label; sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-examples:components/; sure-factor:e2e/demos/form.html
 
 ### form-modal
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/form-modal.html
 
 ### horizontal-icon-menu
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/horizontal-icon-menu.html
 
 ### mail-search-filter
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/mail-search-filter.html
 
 ### markdown
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/markdown.html
 
 ### message-actions
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/message-actions.html
 
 ### page-footer
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/page-footer.html
 
 ### preview-panel
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/preview-panel.html
 
 ### search-filter
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/search-filter.html
 
 ### session-list
 - **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/session-list.html
 
 ### document-graphic
 - **client:** gap

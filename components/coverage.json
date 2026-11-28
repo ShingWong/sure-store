@@ -9,11 +9,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/account-settings.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "auth-login",
@@ -22,11 +28,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/auth-login.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "auth-register",
@@ -35,11 +47,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/auth-register.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "auth-reset-password",
@@ -48,11 +66,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/auth-reset-password.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "contact-form",
@@ -61,11 +85,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/contact-form.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "crud-resource",
@@ -74,11 +104,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/crud-resource.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "data-table",
@@ -89,12 +125,17 @@
         "sure-factor:src/generate-client.test.ts#emits a table renderer for data-table, not a form"
       ],
       "browser": [
-        "sure-examples:components/tests/browser.test.mjs#the generated classes are the catalog ones"
+        "sure-examples:components/tests/browser.test.mjs#the generated classes are the catalog ones",
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
       ],
-      "a11y": [],
-      "demo": [],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/data-table.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "dialog",
@@ -103,11 +144,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/dialog.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "form",
@@ -118,13 +165,16 @@
         "sure-factor:src/generate-client.test.ts#emits a module that parses as JavaScript"
       ],
       "browser": [
-        "sure-examples:components/tests/browser.test.mjs#the generated form appears"
+        "sure-examples:components/tests/browser.test.mjs#the generated form appears",
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
       ],
       "a11y": [
-        "sure-examples:components/tests/browser.test.mjs#every field has a label"
+        "sure-examples:components/tests/browser.test.mjs#every field has a label",
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
       ],
       "demo": [
-        "sure-examples:components/"
+        "sure-examples:components/",
+        "sure-factor:e2e/demos/form.html"
       ],
       "note": null,
       "status": "green"
@@ -136,11 +186,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/form-modal.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "horizontal-icon-menu",
@@ -149,11 +205,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/horizontal-icon-menu.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "mail-search-filter",
@@ -162,11 +224,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/mail-search-filter.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "markdown",
@@ -175,11 +243,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/markdown.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "message-actions",
@@ -188,11 +262,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/message-actions.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "page-footer",
@@ -201,11 +281,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/page-footer.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "preview-panel",
@@ -214,11 +300,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/preview-panel.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "search-filter",
@@ -227,11 +319,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/search-filter.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "session-list",
@@ -240,11 +338,17 @@
       "client": [
         "sure-factor:src/coverage.test.ts#catalog client render coverage"
       ],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/session-list.html"
+      ],
       "note": null,
-      "status": "gap"
+      "status": "green"
     },
     {
       "id": "document-graphic",
