@@ -46,8 +46,8 @@
     },
     "expect": {
       "html_contains": [
-        "<title>Test illustration</title>",
-        "<desc>A synthetic mark.</desc>"
+        "Test illustration",
+        "A synthetic mark."
       ],
       "pages": 1,
       "guards_pass": true
@@ -58,9 +58,9 @@
     "amounts": [],
     "guards_pass": true,
     "html_contains": [
-      "<title>Test illustration</title>",
-      "<desc>A synthetic mark.</desc>"
+      "Test illustration",
+      "A synthetic mark."
     ]
   },
-  "contractDigest": "6ae770b24218b6f26fe84f60f2127e64832a96e9113b8e91bf13a05e8b791bb4"
+  "contractDigest": "b6b5562e373cae2f0d7d8f87d45e60ddd6352d0c099988b7e94cfc5f2b222e42"
 }

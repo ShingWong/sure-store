@@ -40,7 +40,9 @@
     "prepack": "npm run build",
     "verify:behaviour:all": "node --experimental-strip-types verification/run-behaviour.mjs --require-all",
     "check:fixtures": "node verification/validate-fixtures.mjs",
-    "verify:python": "python3 verification/python/run_fixtures.py"
+    "verify:python": "python3 verification/python/run_fixtures.py",
+    "demos:document-parts": "node verification/document-parts.mjs --write-demos",
+    "verify:browser": "SURE_STORE_BROWSER=1 node --test verification/document-parts.browser.test.mjs"
   },
   "keywords": [
     "sqlite",
@@ -61,10 +63,12 @@
     "verification/fixtures"
   ],
   "devDependencies": {
+    "@shing.wong/sure-document": "^0.1.0",
+    "@shing.wong/sure-ui": "^0.3.8",
     "@tursodatabase/database": "^0.8.3",
     "@types/node": "^22.0.0",
     "pg": "^8.23.1",
+    "playwright-core": "^1.65.1",
     "typescript": "^5.7.0"
-  },
-  "dependencies": {}
+  }
 }

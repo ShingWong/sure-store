@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>document-table — sure-store document part</title>
+<style>@layer sure.tokens, sure.components, sure.mobile;
+
+@layer sure.tokens {
+:root {
+  /* Typography contract (all sure-ui themes declare these). */
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --font-size: 100%;
+  --line-height: 1.6;
+  /* Document typography stacks — print metrics live in SURE_TYPOGRAPHY (TS). */
+  --sure-font-h1: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sure-font-h2: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sure-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sure-font-caption: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sure-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  /* Native controls (date pickers, scrollbars) follow the theme. */
+  color-scheme: light;
+  --nord0: #2e3440;
+  --nord1: #3b4252;
+  --nord2: #434c5e;
+  --nord3: #4c566a;
+  --nord4: #767f94;
+  --nord5: #e5e9f0;
+  --nord6: #eceff4;
+  --nord7: #8fbcbb;
+  --nord8: #88c0d0;
+  --nord9: #81a1c1;
+  --nord10: #5e81ac;
+  --nord11: #bf616a;
+  --nord12: #d08770;
+  --nord13: #ebcb8b;
+  --nord14: #a3be8c;
+  --nord15: #b48ead;
+
+  /* Generic aliases: the same names in every theme, so an app can style
+     itself with var(--bg) and still follow whichever theme is active. */
+  --bg: var(--nord6);
+  --surface: var(--nord6);
+  --text: var(--nord0);
+  --muted: var(--nord3);
+  --border: var(--nord4);
+  --accent: #415e9c;
+  --error: var(--nord11);
+  --success: var(--nord14);
+  --highlight: var(--nord5);
+  --warn: var(--nord13);
+
+  /* Status inks: text that reads on a 10% tint of its status colour (alerts,
+     badges). The status hues are mid-tone, so as text they land at 1.7–3.2:1
+     on a near-white page. Each ink is its hue darkened until it clears 4.5:1,
+     verified in index.test.ts. */
+  --error-ink: #86444a;
+  --success-ink: #525f46;
+  --accent-ink: #4d6174;
+  --warn-ink: #6a5b3f;
+  --on-accent: #fff;
+  --primary: var(--nord9);
+  --primary-hover: var(--nord8);
+  --primary-ink: var(--nord0);
+  --toast-bg: var(--nord0);
+  --toast-ink: var(--nord6);
+  --on-error: #fff;
+  --on-success: var(--text);
+  --table-header: var(--nord5);
+  --table-header-ink: var(--nord0);
+  --table-hover: var(--nord6);
+  --field: #fff;
+  --focus: var(--nord9);
+  --sidepanel-bg: #fff;
+  --sidepanel-ink: var(--nord0);
+  --status-bg: var(--nord0);
+  --status-ink: var(--nord6);
+}
+}
+
+@layer sure.components {
+
+
+*, *::before, *::after { box-sizing: border-box; }
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .btn-icon:hover { background: var(--highlight); }
+  .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.25rem; border: none; border-radius: 6px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  color: var(--primary-ink); background: var(--primary);
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.25rem; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  color: var(--text); background: transparent;
+  transition: background 0.15s;
+}
+.btn-secondary:hover { background: var(--highlight); }
+
+/* ── Table ── */
+.sure-table { width: 100%; border-collapse: collapse; }
+.sure-table__header {
+  text-align: left; padding: 0.75rem 1rem;
+  background: var(--table-header); color: var(--table-header-ink);
+  font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+.sure-table__cell { padding: 0.75rem 1rem; border-bottom: 1px solid var(--highlight); }
+.sure-table tr:hover .sure-table__cell { background: var(--table-hover); }
+.sure-table__error { color: var(--error); font-size: 0.8rem; }
+.sure-table__help { color: var(--muted); font-size: 0.8rem; }
+
+  /* ── State hooks & utilities ── */
+
+  .sure-table tr.is-selected { background: var(--border); }
+  
+
+/* Typography consumption — the theme decides the stack and scale; these
+   rules are what actually apply them. Kept identical in every theme so a
+   runtime swap never drops the base typography. */
+html { font-size: var(--font-size, 100%); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: var(--line-height, 1.6);
+}
+code, pre { font-family: var(--font-mono); }
+}
+
+@layer sure.mobile {
+
+
+/* ── Mobile & touch ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .sure-form, .sure-modal__form, .sure-auth__form { max-width: 100%; }
+  .sure-auth__form { padding: 1.25rem; }
+  .side-panel { width: min(320px, 100vw); }
+  .sure-dialog-overlay { padding: 0.5rem; }
+  .sure-dialog { max-width: calc(100vw - 1rem); }
+  .toast { max-width: calc(100vw - 2rem); }
+  .sure-form__actions, .sure-row-actions { flex-wrap: wrap; }
+  .sure-table__cell, .sure-table__header { padding: 0.5rem 0.4rem; }
+}
+
+@media (hover: none) {
+  .message .msg-actions { display: flex; }
+  .sure-session-item .sure-session-actions { display: flex; }
+}
+
+@media (pointer: coarse) {
+  .btn-primary, .btn-secondary, .btn-icon,
+  .sure-auth__btn, .sure-auth__btn--social,
+  .sure-nav__item, .sure-menu__item,
+  .sure-session-item, .side-panel__item { min-height: 44px; }
+  .btn-icon { width: 44px; height: 44px; }
+  .sure-form input, .sure-form select, .sure-form textarea,
+  .sure-modal__form input, .sure-modal__form select, .sure-modal__form textarea,
+  .sure-auth__input, .sure-search__input,
+  .sure-filters input, .sure-filters select { min-height: 44px; }
+  .sure-dialog__resize--e, .sure-dialog__resize--w { width: 16px; }
+  .sure-dialog__resize--n, .sure-dialog__resize--s { height: 16px; }
+  .sure-dialog__resize--ne, .sure-dialog__resize--nw,
+  .sure-dialog__resize--se, .sure-dialog__resize--sw { width: 24px; height: 24px; }
+}
+
+}
+</style>
+<style>body{margin:0;padding:2rem;background:#f4f4f4} .sure-document{margin:0 auto}</style>
+</head>
+<body>
+<style>@page { size: 612pt 792pt; margin: 36pt 36pt 36pt 36pt; }</style>
+<div class="sure-document">
+<section class="sure-document__sheet" style="--sure-sheet-w:612pt;--sure-sheet-h:792pt;--sure-sheet-margin:36pt;--sure-sheet-gap:2rem;--sure-sheet-scale:1;font-family:var(--sure-font-body)"><div style="position:absolute;left:36pt;top:36pt;width:540pt;height:120pt;z-index:1;"><table class="sure-table sure-table--print" style="break-inside:avoid;page-break-inside:avoid;"><thead><tr><th class="sure-table__header">Line</th><th class="sure-table__header">Due</th><th class="sure-table__header">Amount</th><th class="sure-table__header">Description</th></tr></thead><tbody><tr><td class="sure-table__cell">1</td><td class="sure-table__cell">2031-04-15</td><td class="sure-table__cell">$120.00</td><td class="sure-table__cell">Test Person A</td></tr><tr><td class="sure-table__cell">2</td><td class="sure-table__cell">2031-05-15</td><td class="sure-table__cell">$120.00</td><td class="sure-table__cell">Test Person B</td></tr></tbody></table></div><div style="position:absolute;left:36pt;top:180pt;width:540pt;height:80pt;z-index:1;"><table class="sure-table sure-table--print" style="break-inside:avoid;page-break-inside:avoid;"><thead><tr><th class="sure-table__header">Label</th><th class="sure-table__header">Amount</th></tr></thead><tbody><tr><td class="sure-table__cell">Grand total</td><td class="sure-table__cell">$240.00</td></tr></tbody></table></div></section>
+</div>
+</body>
+</html>
