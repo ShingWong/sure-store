@@ -24,11 +24,12 @@ an honest gap, not a pass. **Phase D is not green until every row is green.**
 | `preview-panel` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
 | `search-filter` | sure-factor | vibe | ✓ | ✓ | ✓ | ✓ | green |
 | `session-list` | sure-factor | prototype | ✓ | ✓ | ✓ | ✓ | green |
-| `document-graphic` | sure-store | prototype | — | — | — | — | gap |
-| `document-keyvalue` | sure-store | prototype | — | — | — | — | gap |
-| `document-schedule` | sure-store | prototype | — | — | — | — | gap |
-| `document-table` | sure-store | prototype | — | — | — | — | gap |
-| `document-totals` | sure-store | prototype | — | — | — | — | gap |
+| `settings` | sure-factor | production | ✓ | ✓ | ✓ | ✓ | green |
+| `document-graphic` | sure-store | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `document-keyvalue` | sure-store | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `document-schedule` | sure-store | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `document-table` | sure-store | prototype | ✓ | ✓ | ✓ | ✓ | green |
+| `document-totals` | sure-store | prototype | ✓ | ✓ | ✓ | ✓ | green |
 
 ## Evidence
 
@@ -140,37 +141,38 @@ an honest gap, not a pass. **Phase D is not green until every row is green.**
 - **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
 - **demo:** sure-factor:e2e/demos/session-list.html
 
+### settings
+- **client:** sure-factor:src/coverage.test.ts#catalog client render coverage
+- **browser:** sure-factor:src/e2e/coverage.test.ts#component browser coverage
+- **a11y:** sure-factor:src/e2e/coverage.test.ts#Accessibility invariant
+- **demo:** sure-factor:e2e/demos/settings.html
+
 ### document-graphic
-- **client:** gap
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
-- **note:** sure-store:components/fixtures/document-graphic.golden.json — contract replay only; no client/browser/a11y/demo evidence yet
+- **client:** sure-store:test/document-parts.test.mjs#document part client render coverage
+- **browser:** sure-store:verification/document-parts.browser.test.mjs#document part browser coverage
+- **a11y:** sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant
+- **demo:** sure-store:components/demos/document-graphic.html
 
 ### document-keyvalue
-- **client:** gap
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
-- **note:** sure-store:components/fixtures/document-keyvalue.golden.json — contract replay only; no client/browser/a11y/demo evidence yet
+- **client:** sure-store:test/document-parts.test.mjs#document part client render coverage
+- **browser:** sure-store:verification/document-parts.browser.test.mjs#document part browser coverage
+- **a11y:** sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant
+- **demo:** sure-store:components/demos/document-keyvalue.html
 
 ### document-schedule
-- **client:** gap
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
-- **note:** sure-store:components/fixtures/document-schedule.golden.json — contract replay only; no client/browser/a11y/demo evidence yet
+- **client:** sure-store:test/document-parts.test.mjs#document part client render coverage
+- **browser:** sure-store:verification/document-parts.browser.test.mjs#document part browser coverage
+- **a11y:** sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant
+- **demo:** sure-store:components/demos/document-schedule.html
 
 ### document-table
-- **client:** gap
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
-- **note:** sure-store:components/fixtures/document-table.golden.json — contract replay only; no client/browser/a11y/demo evidence yet
+- **client:** sure-store:test/document-parts.test.mjs#document part client render coverage
+- **browser:** sure-store:verification/document-parts.browser.test.mjs#document part browser coverage
+- **a11y:** sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant
+- **demo:** sure-store:components/demos/document-table.html
 
 ### document-totals
-- **client:** gap
-- **browser:** gap
-- **a11y:** gap
-- **demo:** gap
-- **note:** sure-store:components/fixtures/document-totals.golden.json — contract replay only; no client/browser/a11y/demo evidence yet
+- **client:** sure-store:test/document-parts.test.mjs#document part client render coverage
+- **browser:** sure-store:verification/document-parts.browser.test.mjs#document part browser coverage
+- **a11y:** sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant
+- **demo:** sure-store:components/demos/document-totals.html

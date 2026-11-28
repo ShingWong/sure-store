@@ -29,7 +29,7 @@ test('every catalog entry has exactly one row', () => {
   }
 });
 
-test('green rows require all four evidence kinds; gaps stay visible', () => {
+test('green rows require all four evidence kinds; --strict tracks the gaps', () => {
   const matrix = JSON.parse(readFileSync(join(ROOT, 'components', 'coverage.json'), 'utf8'));
   for (const row of matrix.rows) {
     const complete = ['client', 'browser', 'a11y', 'demo'].every((key) => row[key].length > 0);
@@ -38,7 +38,7 @@ test('green rows require all four evidence kinds; gaps stay visible', () => {
       assert.ok(Array.isArray(row[key]), `${row.id}.${key} is not a list`);
     }
   }
-  // Phase D is not satisfied today; --strict must refuse to claim otherwise.
-  assert.ok(matrix.rows.some((row) => row.status === 'gap'), 'a gap was silently closed');
-  assert.equal(run(['--strict']).status, 1, '--strict must fail while gaps remain');
+  // A green row is a claim: --strict must pass exactly when no gap remains.
+  const gaps = matrix.rows.filter((row) => row.status === 'gap').length;
+  assert.equal(run(['--strict']).status, gaps === 0 ? 0 : 1, gaps === 0 ? '--strict must pass when every row is green' : '--strict must fail while gaps remain');
 });

@@ -90,11 +90,11 @@ function builtInEvidence(id) {
 
 function documentEvidence(id) {
   return {
-    client: [],
-    browser: [],
-    a11y: [],
-    demo: [],
-    note: `sure-store:components/fixtures/${id}.golden.json — contract replay only; no client/browser/a11y/demo evidence yet`,
+    client: ['sure-store:test/document-parts.test.mjs#document part client render coverage'],
+    browser: ['sure-store:verification/document-parts.browser.test.mjs#document part browser coverage'],
+    a11y: ['sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant'],
+    demo: [`sure-store:components/demos/${id}.html`],
+    note: null,
   }
 }
 

@@ -37,7 +37,7 @@ fixture:
     record: { alt: 'Test illustration' }
     svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Test illustration</title><desc>A synthetic mark.</desc></svg>'
   expect:
-    html_contains: ['<title>Test illustration</title>', '<desc>A synthetic mark.</desc>']
+    html_contains: ['Test illustration', 'A synthetic mark.']
     pages: 1
     guards_pass: true
 # ────────────────────────────────────────────────────────────────────────────

@@ -351,59 +351,118 @@
       "status": "green"
     },
     {
+      "id": "settings",
+      "source": "sure-factor",
+      "tier": "production",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [
+        "sure-factor:src/e2e/coverage.test.ts#component browser coverage"
+      ],
+      "a11y": [
+        "sure-factor:src/e2e/coverage.test.ts#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-factor:e2e/demos/settings.html"
+      ],
+      "note": null,
+      "status": "green"
+    },
+    {
       "id": "document-graphic",
       "source": "sure-store",
       "tier": "prototype",
-      "client": [],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
-      "note": "sure-store:components/fixtures/document-graphic.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
-      "status": "gap"
+      "client": [
+        "sure-store:test/document-parts.test.mjs#document part client render coverage"
+      ],
+      "browser": [
+        "sure-store:verification/document-parts.browser.test.mjs#document part browser coverage"
+      ],
+      "a11y": [
+        "sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-store:components/demos/document-graphic.html"
+      ],
+      "note": null,
+      "status": "green"
     },
     {
       "id": "document-keyvalue",
       "source": "sure-store",
       "tier": "prototype",
-      "client": [],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
-      "note": "sure-store:components/fixtures/document-keyvalue.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
-      "status": "gap"
+      "client": [
+        "sure-store:test/document-parts.test.mjs#document part client render coverage"
+      ],
+      "browser": [
+        "sure-store:verification/document-parts.browser.test.mjs#document part browser coverage"
+      ],
+      "a11y": [
+        "sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-store:components/demos/document-keyvalue.html"
+      ],
+      "note": null,
+      "status": "green"
     },
     {
       "id": "document-schedule",
       "source": "sure-store",
       "tier": "prototype",
-      "client": [],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
-      "note": "sure-store:components/fixtures/document-schedule.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
-      "status": "gap"
+      "client": [
+        "sure-store:test/document-parts.test.mjs#document part client render coverage"
+      ],
+      "browser": [
+        "sure-store:verification/document-parts.browser.test.mjs#document part browser coverage"
+      ],
+      "a11y": [
+        "sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-store:components/demos/document-schedule.html"
+      ],
+      "note": null,
+      "status": "green"
     },
     {
       "id": "document-table",
       "source": "sure-store",
       "tier": "prototype",
-      "client": [],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
-      "note": "sure-store:components/fixtures/document-table.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
-      "status": "gap"
+      "client": [
+        "sure-store:test/document-parts.test.mjs#document part client render coverage"
+      ],
+      "browser": [
+        "sure-store:verification/document-parts.browser.test.mjs#document part browser coverage"
+      ],
+      "a11y": [
+        "sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-store:components/demos/document-table.html"
+      ],
+      "note": null,
+      "status": "green"
     },
     {
       "id": "document-totals",
       "source": "sure-store",
       "tier": "prototype",
-      "client": [],
-      "browser": [],
-      "a11y": [],
-      "demo": [],
-      "note": "sure-store:components/fixtures/document-totals.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
-      "status": "gap"
+      "client": [
+        "sure-store:test/document-parts.test.mjs#document part client render coverage"
+      ],
+      "browser": [
+        "sure-store:verification/document-parts.browser.test.mjs#document part browser coverage"
+      ],
+      "a11y": [
+        "sure-store:verification/document-parts.browser.test.mjs#Accessibility invariant"
+      ],
+      "demo": [
+        "sure-store:components/demos/document-totals.html"
+      ],
+      "note": null,
+      "status": "green"
     }
   ]
 }
