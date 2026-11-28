@@ -13,19 +13,12 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { compose } from '@shing.wong/sure-ui'
 import { formatCurrency, renderDocument } from '@shing.wong/sure-document'
+import { PARTS } from './document-parts.contract.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(HERE, '..')
 const FIXTURES = join(ROOT, 'components', 'fixtures')
 const DEMOS = join(ROOT, 'components', 'demos')
-
-export const PARTS = [
-  'document-table',
-  'document-totals',
-  'document-keyvalue',
-  'document-schedule',
-  'document-graphic',
-]
 
 const money = (value) => formatCurrency(Number(value), '¤#,##0.00')
 

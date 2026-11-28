@@ -7,7 +7,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { chromium } from 'playwright-core'
-import { PARTS, demoHtml, renderPart } from './document-parts.mjs'
+import { PARTS, readContract, readDemo } from './document-parts.contract.mjs'
 
 const enabled = process.env.SURE_STORE_BROWSER === '1'
 const EXECUTABLE = process.env.SURE_STORE_CHROME ?? process.env.SURE_MAIL_CHROME ?? '/usr/bin/google-chrome'
@@ -20,10 +20,10 @@ test('document part browser coverage', { skip: !enabled, timeout: 120000 }, asyn
 
   for (const name of PARTS) {
     await t.test(name, async () => {
-      await page.setContent(demoHtml(name), { waitUntil: 'load' })
+      await page.setContent(readDemo(name), { waitUntil: 'load' })
 
       // Every value the contract promises must reach the rendered page.
-      const expect = renderPart(name).fixture.fixture.expect
+      const expect = readContract(name).fixture.expect
       const text = await page.evaluate(() => document.body.textContent ?? '')
       for (const value of expect.html_contains ?? []) {
         assert.ok(text.includes(value), `${name}: rendered text is missing ${JSON.stringify(value)}`)
@@ -57,7 +57,7 @@ test('document part browser coverage', { skip: !enabled, timeout: 120000 }, asyn
   // Accessibility invariants across the whole set.
   await t.test('Accessibility invariant', async () => {
     for (const name of PARTS) {
-      await page.setContent(demoHtml(name), { waitUntil: 'load' })
+      await page.setContent(readDemo(name), { waitUntil: 'load' })
       const tablesWithoutHead = await page.evaluate(
         () => [...document.querySelectorAll('table')].filter((table) => table.querySelectorAll('th').length === 0).length,
       )
@@ -75,7 +75,7 @@ test('document part browser coverage', { skip: !enabled, timeout: 120000 }, asyn
   // The composed sure-ui CSS is present, so this is a styled component, not bare markup.
   await t.test('sure-ui component CSS present', async () => {
     for (const name of PARTS) {
-      await page.setContent(demoHtml(name), { waitUntil: 'load' })
+      await page.setContent(readDemo(name), { waitUntil: 'load' })
       const styled = await page.evaluate(() =>
         [...document.styleSheets].some((sheet) => {
           try {
