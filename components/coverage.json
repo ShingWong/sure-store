@@ -1,0 +1,305 @@
+{
+  "schema": 1,
+  "generatedBy": "verification/coverage.mjs",
+  "rows": [
+    {
+      "id": "account-settings",
+      "source": "sure-factor",
+      "tier": "production",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "auth-login",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "auth-register",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "auth-reset-password",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "contact-form",
+      "source": "sure-factor",
+      "tier": "vibe",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "crud-resource",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "data-table",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage",
+        "sure-factor:src/generate-client.test.ts#emits a table renderer for data-table, not a form"
+      ],
+      "browser": [
+        "sure-examples:components/tests/browser.test.mjs#the generated classes are the catalog ones"
+      ],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "dialog",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "form",
+      "source": "sure-factor",
+      "tier": "vibe",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage",
+        "sure-factor:src/generate-client.test.ts#emits a module that parses as JavaScript"
+      ],
+      "browser": [
+        "sure-examples:components/tests/browser.test.mjs#the generated form appears"
+      ],
+      "a11y": [
+        "sure-examples:components/tests/browser.test.mjs#every field has a label"
+      ],
+      "demo": [
+        "sure-examples:components/"
+      ],
+      "note": null,
+      "status": "green"
+    },
+    {
+      "id": "form-modal",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "horizontal-icon-menu",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "mail-search-filter",
+      "source": "sure-factor",
+      "tier": "vibe",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "markdown",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "message-actions",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "page-footer",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "preview-panel",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "search-filter",
+      "source": "sure-factor",
+      "tier": "vibe",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "session-list",
+      "source": "sure-factor",
+      "tier": "prototype",
+      "client": [
+        "sure-factor:src/coverage.test.ts#catalog client render coverage"
+      ],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": null,
+      "status": "gap"
+    },
+    {
+      "id": "document-graphic",
+      "source": "sure-store",
+      "tier": "prototype",
+      "client": [],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": "sure-store:components/fixtures/document-graphic.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
+      "status": "gap"
+    },
+    {
+      "id": "document-keyvalue",
+      "source": "sure-store",
+      "tier": "prototype",
+      "client": [],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": "sure-store:components/fixtures/document-keyvalue.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
+      "status": "gap"
+    },
+    {
+      "id": "document-schedule",
+      "source": "sure-store",
+      "tier": "prototype",
+      "client": [],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": "sure-store:components/fixtures/document-schedule.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
+      "status": "gap"
+    },
+    {
+      "id": "document-table",
+      "source": "sure-store",
+      "tier": "prototype",
+      "client": [],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": "sure-store:components/fixtures/document-table.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
+      "status": "gap"
+    },
+    {
+      "id": "document-totals",
+      "source": "sure-store",
+      "tier": "prototype",
+      "client": [],
+      "browser": [],
+      "a11y": [],
+      "demo": [],
+      "note": "sure-store:components/fixtures/document-totals.golden.json — contract replay only; no client/browser/a11y/demo evidence yet",
+      "status": "gap"
+    }
+  ]
+}

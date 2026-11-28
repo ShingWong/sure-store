@@ -80,3 +80,22 @@ installs nothing. Its validation rules are a transcription of the published
 list, pinned by `test/components.test.mjs`. Drift in an entry, a guard that
 names an undeclared projection, a missing template block, or a non-synthetic
 fixture fails the gate loudly.
+
+## Phase D coverage matrix
+
+[`COVERAGE.md`](COVERAGE.md) (generated from [`coverage.json`](coverage.json))
+has **one row per catalog entry** across sure-factor's built-in components and
+these document parts. Each row records four checks — client render, browser
+structure, accessibility and demo — with referenced evidence. `✓` means
+evidence exists; `—` is an honest gap, never a pass.
+
+```
+npm run verify:coverage                  # matrix matches catalogs; evidence refs resolve
+node verification/coverage.mjs --write   # regenerate after catalog changes
+node verification/coverage.mjs --strict  # Phase D gate: fails while any row has a gap
+```
+
+Cross-repo evidence is checked when sibling `sure-factor` / `sure-examples`
+checkouts are present (`SURE_FACTOR_DIR` / `SURE_EXAMPLES_DIR`); CI without them
+still validates matrix structure and status consistency. `test/coverage.test.mjs`
+pins the honest-gap rule so `--strict` cannot pass until the gaps are real.
